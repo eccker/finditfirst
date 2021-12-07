@@ -198,10 +198,8 @@ io.on('connection', (socket) => {
 		let i = allClients.indexOf(socket)
 		allClients.splice(i, 1)
 	})
-	socket.on(`noteOn`, (data) => {
-		console.log(`El cliente ${socket.id} envio un "noteOn" con data: ${data} from socker.id: ${socket.id}`)
-	})
-	socket.on(`LED`, (data) => {
+	
+	socket.on(`server`, (data) => {
 		const elements = data.split(";")
 		const commands = elements[0]
 		const uJWT = elements[1]
@@ -226,8 +224,8 @@ io.on('connection', (socket) => {
 			return null;
 		}
 		
-		io.emit(`color`, decoded2.user.color)
-		io.emit(`position`, [decoded2.user.mouseX, decoded2.user.mouseY])
-		io.to(socket.id).emit(`habitat`, `Good job user ID: ` + id)
+		io.emit(`channel01`, decoded2.user.color)
+		io.emit(`channel02`, [decoded2.user.mouseX, decoded2.user.mouseY])
+		io.to(socket.id).emit(`channel03`, `Good job user ID: ` + id)
 	})
 })

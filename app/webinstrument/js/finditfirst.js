@@ -8,6 +8,8 @@ let sketch = (p) => {
 	let tempcol = `#33ffccff`
 	let someHeartBeatPeriod = 0
 
+	let micarta
+
 	let makeHexString = (length = 6) => {
 		let result = ''
 		let characters = 'ABCDEF0123456789'
@@ -37,24 +39,27 @@ let sketch = (p) => {
 			console.log(`Este cliente se ha conectado `);
 		})
 		socket.on('disconnect', () => {
-			// socket.removeAllListeners()
+			socket.removeAllListeners()
 		})
-		socket.on('color',
+		socket.on('channel01',
 			(data) => {
 				console.log(data)
 			}
 		)
-		socket.on('position',
+		socket.on('channel02',
 			(data) => {
 				console.log(data)
 			}
 		)
-		socket.on(`habitat`,
+		socket.on(`channel03`,
 			(data) => {
 				console.log(data)
 			}
 		)
 		someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * 32) + 1)
+
+		micarta = new Card(p.width/2,	p.height/2)
+
 	}
 
 	p.windowResized = () => {
@@ -77,6 +82,7 @@ let sketch = (p) => {
 			tempcol = "#" + makeHexString(8)
 			someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * 48) + 6)
 		}
+		micarta.show(p)
 	}
 
 	p.keyReleased = async () => {
@@ -135,6 +141,6 @@ let sketch = (p) => {
 		let sHeader = JSON.stringify(oHeader)
 		let sPayload = JSON.stringify(oPayload)
 		let signedCommands = KJUR.jws.JWS.sign("HS256", sHeader, sPayload, currentJWT)
-		socket.emit(`LED`, signedCommands + `;` + currentJWT)
+		socket.emit(`server`, signedCommands + `;` + currentJWT)
 	}
 }
