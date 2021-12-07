@@ -2,11 +2,12 @@ const things = ["aback","abaft","abandoned","abashed","aberrant","abhorrent","ab
 
 class Card {
     constructor(x, y) {
-      this.x = x
-      this.y = y
-      this.r = 16;
-      this.objs = [];
-      this.shuffle(this.r)
+        this.x = x
+        this.y = y
+        this.r = 16;
+        this.objs = [];
+        this.shuffle(this.r)
+        this.color = this.makeHexString(6)
     }
   
     shuffle(size) {
@@ -14,23 +15,43 @@ class Card {
             let rn = (Math.floor(Math.random() * things.length))
             const element = things[rn];
             this.objs[index] = element;
-          }
+            }
+        this.color = this.makeHexString(6)
     }
   
     update() {
  
     }
+
+    makeHexString = (length = 6) => {
+		let result = ''
+		let characters = 'ABCDEF0123456789'
+		let charactersLength = characters.length
+		for (var i = 0; i < length; i++) {
+			result += characters.charAt(Math.floor(Math.random() * charactersLength))
+		}
+		return result
+	}
   
     show(p) {
-      p.stroke(255);
-      p.strokeWeight(2);
-      p.fill(255);
+        p.stroke(255);
+        p.strokeWeight(2);
+        
+        p.fill("#"+this.color)
 
-      p.push();
-      p.translate(this.x, this.y);
-    
-      p.rect(-this.r , -this.r , this.r, this.r);
-      p.pop();
+        p.textSize(22)
+        p.text(this.objs,
+            ((p.width / 2) - (p.width / 4)),
+            ((p.height / 2) - (p.height / 3)),
+            ((p.width / 2) + (p.width / 8)),
+            ((p.height / 2) + (p.height / 4))
+        )
+
+        p.push();
+            p.translate(this.x, this.y);
+            
+            p.rect(-this.r , -this.r , this.r, this.r);
+        p.pop();
     }
 
 }

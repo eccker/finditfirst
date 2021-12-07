@@ -77,7 +77,8 @@ let sketch = (p) => {
 			p.rect(0, 0, p.width / 8, altura)
 		}
 		if (elapsedTime > someHeartBeatPeriod) {
-			p.background(p.random(19, 28), p.random(26, 28), p.random(26, 35), 255)	
+			// p.background(p.random(19, 28), p.random(26, 28), p.random(26, 35), 255)	
+			p.background(127,127,127,255)
 			lastGeneratedTime = now
 			tempcol = "#" + makeHexString(8)
 			someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * 48) + 6)
