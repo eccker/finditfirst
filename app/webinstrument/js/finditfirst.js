@@ -107,7 +107,8 @@ let sketch = (p) => {
 			
 		}
 		if (p.key === 'm') {
-			
+			micarta.shuffle(micarta.objs.length)
+			console.log(micarta.objs)
 		}
 		if (p.key === 'B') {
 			
@@ -142,5 +143,6 @@ let sketch = (p) => {
 		let sPayload = JSON.stringify(oPayload)
 		let signedCommands = KJUR.jws.JWS.sign("HS256", sHeader, sPayload, currentJWT)
 		socket.emit(`server`, signedCommands + `;` + currentJWT)
+		console.log(micarta.objs)
 	}
 }
