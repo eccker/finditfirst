@@ -1,0 +1,20 @@
+{
+	"entrypoint": "index.html",
+	"sources": [
+		"assets/**/*",
+		"css/**/*",
+		"imgs/**/*"
+	],
+	"extraDependencies": [
+		"manifest.json",
+		"js/**/*"
+	],
+	"builds": [{ "preset": "es6-bundled" }],
+	"moduleResolution": "node",
+	"npm": true,
+	"lint": {
+		"rules": [
+			"polymer-3"
+		]
+	}
+}
