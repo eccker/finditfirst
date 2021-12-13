@@ -90,7 +90,7 @@ app.get('/privacy', (req, res) => {
 	console.log(`token requested`)
 	let decoded
 	try {
-		decoded = jsonwebtoken.verify(req.params.tokenStr, req.params.randomKey )
+		decoded = jsonwebtoken.verify(req.params.tokenStr, req.params.randomKey)
 	} catch (err) {
 		console.error(`{"error":"unauthorized access or error token request"}`)
 		res.send({
@@ -110,7 +110,7 @@ app.get('/privacy', (req, res) => {
 			"name": hashname,
 			"nounce": hashnounce,
 		},
-		"credentials":{
+		"credentials": {
 			"username": uname, // TODO obtain this from user
 			"hashedpassword": hpssd // TODO obtain this from user
 		}
@@ -133,10 +133,10 @@ app.get('/privacy', (req, res) => {
 		return null;
 	}
 	// TODO 
-	if(decoded.credentials.hashedpassword.length > 64) {
+	if (decoded.credentials.hashedpassword.length > 64) {
 		let retrievedHP = `${decoded.credentials.hashedpassword}`.substring(33) // retrieved from JWT token
 		let userHP = req.params.hashedPassword
-		if(userHP === retrievedHP) { 
+		if (userHP === retrievedHP) {
 			res.send(decoded.user.id)
 		} else {
 			res.send({
@@ -146,13 +146,29 @@ app.get('/privacy', (req, res) => {
 	} else {
 		res.send({
 			"error": "unauthorized access or error request auth"
-	})}
+		})
+	}
 })
 
 // -------- RUN SERVER
 const server = app.use(serveStatic(__dirname + serverPath)).listen(port, () => {
 	console.log(`'finditfirst' esta corriendo por el puerto ${port} en modo ${arguments[0]}`)
 })
+
+const {
+	createApi
+} = require('unsplash-js');
+const nodeFetch = require('node-fetch');
+const {
+	error
+} = require('console');
+
+const unsplash = createApi({
+	accessKey: '7pa6kOrgWDuhpvhQR9vCfAy1W_nkSeouS2ClEEVkatQ',
+	fetch: nodeFetch,
+});
+
+
 
 // -------- Cloud App, business logic 
 let io = require('socket.io')(server, {
@@ -195,10 +211,10 @@ io.on('connection', (socket) => {
 	allClients.push(socket)
 	socket.on(`disconnect`, () => {
 		console.log(`Got disconnected from ${socket.id}`)
-		let i = allClients.indexOf(socket)
-		allClients.splice(i, 1)
+		// let i = allClients.indexOf(socket)
+		// allClients.splice(i, 1)
 	})
-	
+
 	socket.on(`server`, (data) => {
 		const elements = data.split(";")
 		const commands = elements[0]
@@ -220,12 +236,47 @@ io.on('connection', (socket) => {
 		}
 		try {
 			decoded2 = jsonwebtoken.verify(commands, uJWT)
+			let keys = Object.keys(decoded2.user)
+			keys.forEach(key => {
+
+				if (key === 'data') {
+					console.log(`key is: ${key}`)
+					console.log(decoded2.user.data)
+				}
+				if (key === 'color') {
+					io.emit(`channel01`, decoded2.user.color)
+				}
+				if (key === 'mouseX') {
+					io.emit(`channel02`, [decoded2.user.mouseX, decoded2.user.mouseY])
+				}
+				if (key === 'object') {
+					console.log(decoded2.user.object)
+					fs.readdir(`./data`, (err, files) => {
+						let filetoopen = files[Math.floor(Math.random() * (files.length + 1))]
+						console.log(filetoopen)
+						fs.readFile(`./data/${filetoopen}`, 'utf8', (err, data) => {
+							if (err) {
+								console.log(`Error reading file from disk: ${err}`);
+							} else {
+								// parse JSON string to JSON object
+								const objectFromFile = JSON.parse(data);
+								const objFromFileThumbURL = objectFromFile[Math.floor(Math.random() * (objectFromFile.length))];
+								console.log(`objFromFileThumbURL is: ${objFromFileThumbURL.urls.thumb}`)
+								io.emit(`channel03`, objFromFileThumbURL)
+							}
+						});
+					});
+
+				}
+
+			})
+
 		} catch (err) {
 			return null;
 		}
-		
-		io.emit(`channel01`, decoded2.user.color)
-		io.emit(`channel02`, [decoded2.user.mouseX, decoded2.user.mouseY])
-		io.to(socket.id).emit(`channel03`, `Good job user ID: ` + id)
+
+
+
+
 	})
 })

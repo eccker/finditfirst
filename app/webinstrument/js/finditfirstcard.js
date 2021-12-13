@@ -12,10 +12,10 @@ class Card {
   
     shuffle(size) {
         for (let index = 0; index < size; index++) {
-            let rn = (Math.floor(Math.random() * things.length))
+            let rn = (Math.floor(Math.random() * (things.length+1)))
             const element = things[rn];
             this.objs[index] = element;
-            }
+        }
         this.color = this.makeHexString(6)
     }
   
