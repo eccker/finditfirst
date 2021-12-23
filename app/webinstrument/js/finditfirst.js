@@ -4,6 +4,8 @@ let sketch = (p) => {
 	let canvasApp
 	let filename_prefix = `finditfirst_`
 
+	let imgDragged
+
 	let elapsedTime
 	let tempcol = `#33ffccff`
 	let someHeartBeatPeriod = 0
@@ -106,13 +108,13 @@ let sketch = (p) => {
 			(data) => {
 				console.log(data)
 
-				if (misCartas.length > 5) {
-					misCartas = []
+				if (micarta.imgs.length > 5) {
+					micarta.imgs = []
 				}
 
 				if (data == undefined) return
 				p.loadImage(data.urls.thumb, _img => {
-					misCartas.push(_img)
+					micarta.imgs.push(_img)
 				})
 			}
 		)
@@ -140,6 +142,7 @@ let sketch = (p) => {
 		// encodeSendJWTData({
 		// 	"hola": "mundo"
 		// })
+		micarta.initCards(p)
 
 		micarta.shuffle(micarta.objs.length)
 		// console.log(micarta.objs)
@@ -161,30 +164,20 @@ let sketch = (p) => {
 	}
 
 	p.draw = () => {
-		micarta._indexx++
-		if (micarta._indexx % 3 === 0) {
-			micarta._indexx = 0
-			micarta._indexy++
-			if (micarta._indexy % 2 === 0) {
-				micarta._indexy = 0
-				micarta._indexx = 0
-			}
-		}
-		let imageIndex = micarta._indexx + (micarta._indexy * 3)
-		let localimage = misCartas[imageIndex]
-		micarta.img = localimage
 		micarta.show(p)
 
 		if (draw_allowed) {
 			if (draw_1) {
-				x1 = p.mouseX - t1;
-				y1 = p.mouseY - t2;
-			}
-			if (localimage) {
-				p.image(misCartas[0], x1, y1);
+				p.background(p.random(19, 28), p.random(26, 28), p.random(26, 35), 127)
+				// x1 = p.mouseX - t1;
+				// y1 = p.mouseY - t2;
+				micarta.locationsX[imgDragged] = p.mouseX - t1;
+				micarta.locationsY[imgDragged] = p.mouseY - t2;
 			}
 		}
-
+		// if (micarta.imgs[0] != undefined) {
+		// 	p.image(micarta.imgs[0], x1, y1);
+		// }
 
 		now = p.millis()
 		elapsedTime = now - lastGeneratedTime
@@ -200,6 +193,14 @@ let sketch = (p) => {
 			lastGeneratedTime = now
 			tempcol = "#" + makeHexString(8)
 			someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * 48) + 6)
+			micarta.shuffle(micarta.objs.length)
+			// console.log(micarta.objs)
+			tempcol = "#" + makeHexString(8)
+			const objectToSend = micarta.objs[Math.floor(Math.random() * micarta.objs.length)]
+			for (let index = 0; index < 6; index++) {
+				encodeSendJWTData(objectToSend)
+			}
+			p.background(p.random(1, 8), p.random(6, 18), p.random(6, 15), 255)
 		}
 
 		// micarta.show(p)
@@ -254,17 +255,26 @@ let sketch = (p) => {
 
 	p.mousePressed = () => {
 
-		draw_allowed = true;
-		if (p.mouseX > x1 - cards[0].width / 2 && p.mouseX < x1 + cards[0].width / 2) {
-			if (p.mouseY > y1 - cards[0].height / 2 && p.mouseY < y1 + cards[0].height / 2) {
-				t1 = p.map(p.mouseX - (x1 - cards[0].width / 2), 0, cards[0].width, -cards[0].width / 2, cards[0].width / 2)
-				t2 = p.map(p.mouseY - (y1 - cards[0].height / 2), 0, cards[0].height, -cards[0].height / 2, cards[0].height / 2)
+		// if (p.mouseX > x1 - cards[0].width / 2 && p.mouseX < x1 + cards[0].width / 2) {
+		// 	if (p.mouseY > y1 - cards[0].height / 2 && p.mouseY < y1 + cards[0].height / 2) {
+		// 		t1 = p.map(p.mouseX - (x1 - cards[0].width / 2), 0, cards[0].width, -cards[0].width / 2, cards[0].width / 2)
+		// 		t2 = p.map(p.mouseY - (y1 - cards[0].height / 2), 0, cards[0].height, -cards[0].height / 2, cards[0].height / 2)
+		// 		d1 = 0;
+		// 	} else {
+		// 		d1 = 101;
+		// 	}
+		// } else {
+		// 	d1 = 101;
+		// }
+		for(let idx = 0; idx < micarta.imgs.length; idx++){
+			if (micarta.checkPressed(p, idx)) {
+				draw_allowed = true;
+				imgDragged = idx
+				t1 = p.map(p.mouseX - (micarta.locationsX[idx] - micarta.imgs[idx].width / 2), 0, micarta.imgs[idx].width, -micarta.imgs[idx].width / 2, micarta.imgs[idx].width / 2)
+				t2 = p.map(p.mouseY - (micarta.locationsY[idx] - micarta.imgs[idx].height / 2), 0, micarta.imgs[idx].height, -micarta.imgs[idx].height / 2, micarta.imgs[idx].height / 2)
 				d1 = 0;
-			} else {
-				d1 = 101;
 			}
-		} else {
-			d1 = 101;
+
 		}
 
 	}
