@@ -9,6 +9,8 @@ let sketch = (p) => {
 	let someHeartBeatPeriod = 0
 
 	let micarta
+	let misCartas = []
+	let photodata
 
 	let cards = []
 	let _indexx = 0
@@ -49,8 +51,30 @@ let sketch = (p) => {
 		socket.emit(`server`, signedCommands + `;` + currentJWT)
 	}
 
+
+	let encodeSendJWTData = (_dataToSend) => {
+
+		let currentJWT = window.localStorage.getItem('userJWT')
+		let oHeader = {
+			alg: 'HS256',
+			typ: 'JWT'
+		}
+
+		let oPayload = {
+			"user": {
+				"data": _dataToSend,
+			}
+		}
+		let sHeader = JSON.stringify(oHeader)
+		let sPayload = JSON.stringify(oPayload)
+		let signedCommands = KJUR.jws.JWS.sign("HS256", sHeader, sPayload, currentJWT)
+		socket.emit(`server`, signedCommands + `;` + currentJWT)
+	}
+
 	p.preload = () => {
 		cards[0] = p.loadImage('https://images.unsplash.com/photo-1451226428352-cf66bf8a0317?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwyODE0NDJ8MHwxfHNlYXJjaHw4fHx3b3JkfGVufDB8MHx8fDE2MzkxNTYwMTg&ixlib=rb-1.2.1&q=80&w=200');
+
+
 	}
 
 	p.setup = () => {
@@ -81,30 +105,53 @@ let sketch = (p) => {
 		socket.on('channel02',
 			(data) => {
 				console.log(data)
+
+				if (misCartas.length > 5) {
+					misCartas = []
+				}
+
+				if (data == undefined) return
+				p.loadImage(data.urls.thumb, _img => {
+					misCartas.push(_img)
+				})
 			}
 		)
 		socket.on(`channel03`,
 			(data) => {
-				console.log(data)
+				// console.log(data)
+				// photodata = data
+				// p.loadImage(data.urls.thumb, _img => {
+				// 	cards.push(_img)
 
-				p.loadImage(data.urls.thumb, _img => {
-					cards.push(_img)
+				// 	p.image(_img, _img.width/2 + p.width / 8 + ((p.width / 4) * _indexx), (_img.height / 2) + ((p.height / 4) * _indexy))
+				// 	_indexx++
 
-					p.image(_img, p.width / 8 + ((p.width / 4) * _indexx), ((p.height / 4) * _indexy))
-					_indexx++
-
-					if (cards.length % 1 === 0) {
-						_indexx = 0
-						_indexy++
-						if (_indexy >= 4) {
-							_indexy = 0
-						}
-					}
-				})
+				// 	if (cards.length % 1 === 0) {
+				// 		_indexx = 0
+				// 		_indexy++
+				// 		if (_indexy >= 4) {
+				// 			_indexy = 0
+				// 		}
+				// 	}
+				// })
 			}
 		)
-		someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * 32) + 1)
 		micarta = new Card(p.width / 2, p.height / 2)
+		// encodeSendJWTData({
+		// 	"hola": "mundo"
+		// })
+
+		micarta.shuffle(micarta.objs.length)
+		// console.log(micarta.objs)
+		tempcol = "#" + makeHexString(8)
+		const objectToSend = micarta.objs[Math.floor(Math.random() * micarta.objs.length)]
+		for (let index = 0; index < 6; index++) {
+			encodeSendJWTData(objectToSend)
+		}
+
+		someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * 32) + 1)
+
+
 		draw_allowed = true;
 	}
 
@@ -114,16 +161,32 @@ let sketch = (p) => {
 	}
 
 	p.draw = () => {
-		if (draw_allowed) {
-			// p.background(255);
-			if (draw_1) {
-			  x1 = p.mouseX-t1;
-			  y1 = p.mouseY-t2;
+		micarta._indexx++
+		if (micarta._indexx % 3 === 0) {
+			micarta._indexx = 0
+			micarta._indexy++
+			if (micarta._indexy % 2 === 0) {
+				micarta._indexy = 0
+				micarta._indexx = 0
 			}
-			p.image(cards[cards.length-1], x1, y1);
-		
-		  }
-		  now = p.millis()
+		}
+		let imageIndex = micarta._indexx + (micarta._indexy * 3)
+		let localimage = misCartas[imageIndex]
+		micarta.img = localimage
+		micarta.show(p)
+
+		if (draw_allowed) {
+			if (draw_1) {
+				x1 = p.mouseX - t1;
+				y1 = p.mouseY - t2;
+			}
+			if (localimage) {
+				p.image(misCartas[0], x1, y1);
+			}
+		}
+
+
+		now = p.millis()
 		elapsedTime = now - lastGeneratedTime
 		let altura = p.map(elapsedTime, 0, someHeartBeatPeriod, 0, p.height)
 		if (elapsedTime < someHeartBeatPeriod) {
@@ -139,9 +202,8 @@ let sketch = (p) => {
 			someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * 48) + 6)
 		}
 
-		
+		// micarta.show(p)
 
-		micarta.show(p)
 	}
 
 	p.keyReleased = async () => {
@@ -170,7 +232,9 @@ let sketch = (p) => {
 			// console.log(micarta.objs)
 			tempcol = "#" + makeHexString(8)
 			const objectToSend = micarta.objs[Math.floor(Math.random() * micarta.objs.length)]
-			encodeSendJWTMessage(objectToSend)
+			for (let index = 0; index < 6; index++) {
+				encodeSendJWTData(objectToSend)
+			}
 		}
 		if (p.key === 'B') {
 
@@ -191,29 +255,29 @@ let sketch = (p) => {
 	p.mousePressed = () => {
 
 		draw_allowed = true;
-		if (p.mouseX > x1 - cards[0].width/2 && p.mouseX < x1 + cards[0].width/2 ) {
-		  if (p.mouseY > y1 - cards[0].height/2 && p.mouseY < y1 + cards[0].height/2 ) {
-			t1 = p.map(p.mouseX - (x1 - cards[0].width/2),0, cards[0].width, -cards[0].width/2, cards[0].width/2 )
-			t2 = p.map(p.mouseY - (y1 - cards[0].height/2),0, cards[0].height, -cards[0].height/2, cards[0].height/2 )
-			d1 = 0;
-		  } else {
-			d1 = 101;
-		  }
+		if (p.mouseX > x1 - cards[0].width / 2 && p.mouseX < x1 + cards[0].width / 2) {
+			if (p.mouseY > y1 - cards[0].height / 2 && p.mouseY < y1 + cards[0].height / 2) {
+				t1 = p.map(p.mouseX - (x1 - cards[0].width / 2), 0, cards[0].width, -cards[0].width / 2, cards[0].width / 2)
+				t2 = p.map(p.mouseY - (y1 - cards[0].height / 2), 0, cards[0].height, -cards[0].height / 2, cards[0].height / 2)
+				d1 = 0;
+			} else {
+				d1 = 101;
+			}
 		} else {
 			d1 = 101;
-		  }
+		}
 
 	}
 
 	p.mouseReleased = () => {
 		draw_allowed = false;
 		draw_1 = false;
-	  }
+	}
 
 	p.mouseDragged = () => {
 		if (d1 < 100) {
-		  draw_1 = true;
-		  return;
+			draw_1 = true;
+			return;
 		}
 	}
 

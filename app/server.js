@@ -242,6 +242,24 @@ io.on('connection', (socket) => {
 				if (key === 'data') {
 					console.log(`key is: ${key}`)
 					console.log(decoded2.user.data)
+
+					fs.readdir(`./data`, (err, files) => {
+						let filetoopen = files[Math.floor(Math.random() * (files.length + 1))]
+						console.log(filetoopen)
+						fs.readFile(`./data/${filetoopen}`, 'utf8', (err, data) => {
+							if (err) {
+								console.log(`Error reading file from disk: ${err}`);
+							} else {
+								// parse JSON string to JSON object
+								const objectFromFile = JSON.parse(data);
+								const objFromFileThumbURL = objectFromFile[Math.floor(Math.random() * (objectFromFile.length))];
+								console.log(`objFromFileThumbURL is: ${objFromFileThumbURL.urls.thumb}`)
+								io.emit(`channel02`, objFromFileThumbURL)
+							}
+						});
+					});
+
+
 				}
 				if (key === 'color') {
 					io.emit(`channel01`, decoded2.user.color)
