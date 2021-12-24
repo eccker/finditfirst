@@ -262,7 +262,8 @@ io.on('connection', (socket) => {
 
 				}
 				if (key === 'buffer') {
-					for (let idxBuff = 0; idxBuff < 16; idxBuff++) {
+					let buffLenght = decoded2.user.buffer;
+					for (let idxBuff = 0; idxBuff < buffLenght; idxBuff++) {
 						fs.readdir(`./data`, (err, files) => {
 							let filetoopen = files[Math.floor(Math.random() * (files.length + 1))]
 							console.log(filetoopen)

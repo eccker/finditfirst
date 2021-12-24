@@ -15,6 +15,8 @@ let sketch = (p) => {
 	let bufferDeckData = []
 	let bufferDeckImgs = []
 
+	let difficulty = 16
+
 	let draw_allowed;
 	let draw_1, d1, t1, t2
 
@@ -68,7 +70,7 @@ let sketch = (p) => {
 		socket.emit(`server`, signedCommands + `;` + currentJWT)
 	}
 
-	let encodeSendJWTRequestBuffer = () => {
+	let encodeSendJWTRequestBuffer = (buffLength = 16) => {
 
 		let currentJWT = window.localStorage.getItem('userJWT')
 		let oHeader = {
@@ -78,7 +80,7 @@ let sketch = (p) => {
 
 		let oPayload = {
 			"user": {
-				"buffer": "request",
+				"buffer": buffLength,
 			}
 		}
 		let sHeader = JSON.stringify(oHeader)
@@ -114,11 +116,11 @@ let sketch = (p) => {
 		})
 		socket.on('channel01',
 			(data) => {
-				if (bufferDeckData.length > 15) {
+				if (bufferDeckData.length > (difficulty - 1)) {
 					bufferDeckData.shift()
 					bufferDeckImgs.shift()
 				}
-				
+
 				p.loadImage(data.urls.thumb, _img => {
 					bufferDeckImgs.push(_img)
 					bufferDeckData.push(data)
@@ -149,15 +151,10 @@ let sketch = (p) => {
 				let rn = Math.floor(Math.random() * bufferDeckImgs.length)
 				cartaopuesta.imgs.push(bufferDeckImgs[rn])
 				cartaopuesta.data.push(bufferDeckData[rn])
-
-				// p.loadImage(data.urls.thumb, _img => {
-				// 	cartaopuesta.imgs.push(_img)
-				// 	cartaopuesta.data.push(data)
-				// })
 			}
 		)
-
-		encodeSendJWTRequestBuffer()
+		difficulty = 16
+		encodeSendJWTRequestBuffer(difficulty)
 
 
 		cartaopuesta = new Card(0, 0)
@@ -263,6 +260,7 @@ let sketch = (p) => {
 	}
 
 	p.mousePressed = () => {
+		p.loop()
 		for (let idx = 0; idx < micarta.imgs.length; idx++) {
 			if (micarta.checkPressed(p, idx)) {
 				console.log(`pressed ${idx}`)
@@ -288,6 +286,29 @@ let sketch = (p) => {
 					console.log(`Incredible, you found a match! it took you ${elapsedTime} ms to complete`)
 					micarta.locationsX[imgDragged] = cartaopuesta.locationsX[idx]
 					micarta.locationsY[imgDragged] = cartaopuesta.locationsY[idx]
+					p.noLoop()
+
+					lastGeneratedTime = now
+
+					someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * 48) + 8)
+					tempcol = "#" + makeHexString(8)
+					difficulty++
+					encodeSendJWTRequestBuffer(difficulty)
+
+					const objectToSend = micarta.objs[Math.floor(Math.random() * micarta.objs.length)]
+					for (let index = 0; index < 6; index++) {
+						encodeSendJWTData(objectToSend)
+						encodeSendJWTMessage(objectToSend)
+					}
+					p.background(10, 10, 10, 251)
+					// micarta.locationsX[imgDragged] = micarta.imgs[imgDragged].width / 2 + p.width / 8 + ((p.width / 4) * (imgDragged % 3)) + micarta.x;
+					// if (imgDragged < 3) {
+					// 	micarta.locationsY[imgDragged] = (micarta.imgs[imgDragged].height / 2) + ((p.height / 4) * (0)) + micarta.y;
+					// } else {
+					// 	micarta.locationsY[imgDragged] = (micarta.imgs[imgDragged].height / 2) + ((p.height / 4) * (1)) + micarta.y;
+					// }
+					
+
 				} else {
 					micarta.locationsX[imgDragged] = micarta.imgs[imgDragged].width / 2 + p.width / 8 + ((p.width / 4) * (imgDragged % 3)) + micarta.x;
 					if (imgDragged < 3) {
