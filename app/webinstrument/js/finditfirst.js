@@ -107,26 +107,30 @@ let sketch = (p) => {
 		)
 		socket.on('channel02',
 			(data) => {
-				console.log(data)
-
+				if (data == undefined) return
 				if (micarta.imgs.length > 5) {
 					micarta.imgs = []
+					micarta.data = []
+					// console.log(JSON.stringify(data,null,4))
 				}
 
-				if (data == undefined) return
+				
 				p.loadImage(data.urls.thumb, _img => {
 					micarta.imgs.push(_img)
+					micarta.data.push(data)
 				})
 			}
 		)
 		socket.on(`channel03`,
 			(data) => {
+				if (data == undefined) return
 				if (cartaopuesta.imgs.length > 5) {
 					cartaopuesta.imgs = []
+					cartaopuesta.data = []
 				}
-				if (data == undefined) return
 				p.loadImage(data.urls.thumb, _img => {
 					cartaopuesta.imgs.push(_img)
+					cartaopuesta.data.push(data)
 				})
 			}
 		)
@@ -136,8 +140,7 @@ let sketch = (p) => {
 		micarta = new Card(0, p.height / 2)
 		micarta.initCards(p)
 
-		micarta.shuffle(micarta.objs.length)
-		tempcol = "#" + makeHexString(8)
+		
 		const objectToSend = micarta.objs[Math.floor(Math.random() * micarta.objs.length)]
 		for (let index = 0; index < 6; index++) {
 			encodeSendJWTData(objectToSend)
@@ -174,15 +177,16 @@ let sketch = (p) => {
 		}
 		if (elapsedTime > someHeartBeatPeriod) {
 			lastGeneratedTime = now
+			
+			someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * 48) + 8)
 			tempcol = "#" + makeHexString(8)
-			someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * 48) + 6)
-			micarta.shuffle(micarta.objs.length)
-			tempcol = "#" + makeHexString(8)
+
 			const objectToSend = micarta.objs[Math.floor(Math.random() * micarta.objs.length)]
 			for (let index = 0; index < 6; index++) {
 				encodeSendJWTData(objectToSend)
+				encodeSendJWTMessage(objectToSend)
+
 			}
-			// p.background(p.random(1, 8), p.random(6, 18), p.random(6, 15), 255)
 			p.background(10,10,10, 251)
 		}
 	}
@@ -206,18 +210,12 @@ let sketch = (p) => {
 
 		}
 		if (p.key === 'b') {
-			cartaopuesta.shuffle(micarta.objs.length)
-			// console.log(micarta.objs)
-			tempcol = "#" + makeHexString(8)
-			const objectToSend = cartaopuesta.objs[Math.floor(Math.random() * micarta.objs.length)]
+		const objectToSend = cartaopuesta.objs[Math.floor(Math.random() * micarta.objs.length)]
 			for (let index = 0; index < 6; index++) {
 				encodeSendJWTMessage(objectToSend)
 			}
 		}
 		if (p.key === 'm') {
-			micarta.shuffle(micarta.objs.length)
-			// console.log(micarta.objs)
-			tempcol = "#" + makeHexString(8)
 			const objectToSend = micarta.objs[Math.floor(Math.random() * micarta.objs.length)]
 			for (let index = 0; index < 6; index++) {
 				encodeSendJWTData(objectToSend)
@@ -242,6 +240,7 @@ let sketch = (p) => {
 	p.mousePressed = () => {
 		for(let idx = 0; idx < micarta.imgs.length; idx++){
 			if (micarta.checkPressed(p, idx)) {
+				console.log(`pressed ${idx}`)
 				draw_allowed = true;
 				imgDragged = idx
 				t1 = p.map(p.mouseX - (micarta.locationsX[idx] - micarta.imgs[idx].width / 2), 0, micarta.imgs[idx].width, -micarta.imgs[idx].width / 2, micarta.imgs[idx].width / 2)
@@ -255,8 +254,12 @@ let sketch = (p) => {
 		draw_allowed = false;
 		draw_1 = false;
 		for(let idx = 0; idx < micarta.imgs.length; idx++){
-			if (micarta.checkOver(p, imgDragged,cartaopuesta, idx)) {
+			if (micarta.checkOver(p, imgDragged, cartaopuesta, idx)) {
 				console.log(`my card ${imgDragged} is over card ${idx}`)
+				let thisImgData = micarta.data[imgDragged]
+				console.log(thisImgData.alt_description)
+				console.log(cartaopuesta.data[idx].alt_description)
+
 				p.background(10,10,10, 251)
 				micarta.locationsX[imgDragged] = cartaopuesta.locationsX[idx]
 				micarta.locationsY[imgDragged] = cartaopuesta.locationsY[idx]
