@@ -111,10 +111,7 @@ let sketch = (p) => {
 				if (micarta.imgs.length > 5) {
 					micarta.imgs = []
 					micarta.data = []
-					// console.log(JSON.stringify(data,null,4))
 				}
-
-				
 				p.loadImage(data.urls.thumb, _img => {
 					micarta.imgs.push(_img)
 					micarta.data.push(data)
@@ -140,33 +137,33 @@ let sketch = (p) => {
 		micarta = new Card(0, p.height / 2)
 		micarta.initCards(p)
 
-		
+
 		const objectToSend = micarta.objs[Math.floor(Math.random() * micarta.objs.length)]
 		for (let index = 0; index < 6; index++) {
 			encodeSendJWTData(objectToSend)
 		}
 		someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * 32) + 1)
 		draw_allowed = true;
-		p.background(10,10,10, 251)
+		p.background(10, 10, 10, 251)
 	}
 
 	p.windowResized = () => {
 		p.resizeCanvas(p.windowWidth, p.windowHeight)
-		p.background(10,10,10, 251)
+		p.background(10, 10, 10, 251)
 		// p.background(p.random(19, 28), p.random(26, 28), p.random(26, 35), 255)
 	}
 
 	p.draw = () => {
 		if (draw_allowed) {
 			if (draw_1) {
-				p.background(10,10,10, 251)
+				p.background(10, 10, 10, 251)
 				micarta.locationsX[imgDragged] = p.mouseX - t1;
 				micarta.locationsY[imgDragged] = p.mouseY - t2;
-
 			}
 		}
 		cartaopuesta.show(p)
 		micarta.show(p)
+
 		now = p.millis()
 		elapsedTime = now - lastGeneratedTime
 		let altura = p.map(elapsedTime, 0, someHeartBeatPeriod, 0, p.height)
@@ -177,7 +174,7 @@ let sketch = (p) => {
 		}
 		if (elapsedTime > someHeartBeatPeriod) {
 			lastGeneratedTime = now
-			
+
 			someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * 48) + 8)
 			tempcol = "#" + makeHexString(8)
 
@@ -187,7 +184,7 @@ let sketch = (p) => {
 				encodeSendJWTMessage(objectToSend)
 
 			}
-			p.background(10,10,10, 251)
+			p.background(10, 10, 10, 251)
 		}
 	}
 
@@ -210,7 +207,7 @@ let sketch = (p) => {
 
 		}
 		if (p.key === 'b') {
-		const objectToSend = cartaopuesta.objs[Math.floor(Math.random() * micarta.objs.length)]
+			const objectToSend = cartaopuesta.objs[Math.floor(Math.random() * micarta.objs.length)]
 			for (let index = 0; index < 6; index++) {
 				encodeSendJWTMessage(objectToSend)
 			}
@@ -238,7 +235,7 @@ let sketch = (p) => {
 	}
 
 	p.mousePressed = () => {
-		for(let idx = 0; idx < micarta.imgs.length; idx++){
+		for (let idx = 0; idx < micarta.imgs.length; idx++) {
 			if (micarta.checkPressed(p, idx)) {
 				console.log(`pressed ${idx}`)
 				draw_allowed = true;
@@ -253,16 +250,25 @@ let sketch = (p) => {
 	p.mouseReleased = () => {
 		draw_allowed = false;
 		draw_1 = false;
-		for(let idx = 0; idx < micarta.imgs.length; idx++){
+		for (let idx = 0; idx < micarta.imgs.length; idx++) {
 			if (micarta.checkOver(p, imgDragged, cartaopuesta, idx)) {
 				console.log(`my card ${imgDragged} is over card ${idx}`)
 				let thisImgData = micarta.data[imgDragged]
-				console.log(thisImgData.alt_description)
-				console.log(cartaopuesta.data[idx].alt_description)
+				console.log(`It took you ${elapsedTime/1000} s to complete`)
+				p.background(10, 10, 10, 251)
+				if (thisImgData.id === cartaopuesta.data[idx].id) {
+					console.log(`Incredible, you found a match! it took you ${elapsedTime} ms to complete`)
+					micarta.locationsX[imgDragged] = cartaopuesta.locationsX[idx]
+					micarta.locationsY[imgDragged] = cartaopuesta.locationsY[idx]
+				} else {
+					micarta.locationsX[imgDragged] = micarta.imgs[imgDragged].width / 2 + p.width / 8 + ((p.width / 4) * (imgDragged % 3)) + micarta.x;
+					if (imgDragged < 3) {
+						micarta.locationsY[imgDragged] = (micarta.imgs[imgDragged].height / 2) + ((p.height / 4) * (0)) + micarta.y;
+					} else {
+						micarta.locationsY[imgDragged] = (micarta.imgs[imgDragged].height / 2) + ((p.height / 4) * (1)) + micarta.y;
+					}
+				}
 
-				p.background(10,10,10, 251)
-				micarta.locationsX[imgDragged] = cartaopuesta.locationsX[idx]
-				micarta.locationsY[imgDragged] = cartaopuesta.locationsY[idx]
 			}
 		}
 	}

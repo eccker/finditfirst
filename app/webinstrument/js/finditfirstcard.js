@@ -68,8 +68,7 @@ const baseData = {
             "paypal_email": null
         }
     },
-    "tags": [
-        {
+    "tags": [{
             "type": "search",
             "title": "nürnberg"
         },
@@ -109,21 +108,22 @@ class Card {
     }
 
     initCards(p) {
-        p.loadImage('https://images.unsplash.com/photo-1451226428352-cf66bf8a0317?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwyODE0NDJ8MHwxfHNlYXJjaHw4fHx3b3JkfGVufDB8MHx8fDE2MzkxNTYwMTg&ixlib=rb-1.2.1&q=80&w=200', _img => {
-            // this.img = _img
-            for (let index = 0; index < 6; index++) {
-                this.imgs[index] = _img
-                this.data[index] = baseData
-                console.log(`index is : ${index} with index % 3: ${index%3} and index % 2: ${index%2}`)
+        for (let index = 0; index < 6; index++) {
+            if (this.imgs.length > 5) {
+                this.imgs = []
+                this.data = []
+            }
+            p.loadImage(baseData.urls.thumb, _img => {
+                this.imgs.push(_img)
+                this.data.push(baseData)
                 this.locationsX[index] = _img.width / 2 + p.width / 8 + ((p.width / 4) * (index % 3)) + this.x;
-                if(index < 3 ) {
+                if (index < 3) {
                     this.locationsY[index] = (_img.height / 2) + ((p.height / 4) * (0)) + this.y;
-                }  else {
+                } else {
                     this.locationsY[index] = (_img.height / 2) + ((p.height / 4) * (1)) + this.y;
                 }
-            }
-        })
-
+            })
+        }
     }
 
     checkPressed(p, index) {
@@ -138,8 +138,8 @@ class Card {
         }
     }
 
-    checkOver(p, imgDragged, card, index){
-        if (this.locationsX[imgDragged] > card.locationsX[index] - card.imgs[index].width / 2 && this.locationsX[imgDragged] < card.locationsX[index] + card.imgs[index].width ) {
+    checkOver(p, imgDragged, card, index) {
+        if (this.locationsX[imgDragged] > card.locationsX[index] - card.imgs[index].width / 2 && this.locationsX[imgDragged] < card.locationsX[index] + card.imgs[index].width) {
             if (this.locationsY[imgDragged] > card.locationsY[index] - card.imgs[index].height / 2 && this.locationsY[imgDragged] < card.locationsY[index] + card.imgs[index].height) {
                 return true
             } else {
