@@ -88,8 +88,6 @@ class Card {
             let imageIndex = this._indexx + (this._indexy * 3)
             const localImg = this.imgs[imageIndex];
             if (localImg == undefined) return
-            // const xLocation = localImg.width / 2 + p.width / 8 + ((p.width / 4) * this._indexx);
-            // const yLocation = (localImg.height / 2) + ((p.height / 4) * this._indexy);
             p.image(localImg, this.locationsX[imageIndex], this.locationsY[imageIndex])
         }
 
