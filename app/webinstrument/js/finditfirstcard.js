@@ -28,39 +28,36 @@ class Card {
         p.loadImage('https://images.unsplash.com/photo-1451226428352-cf66bf8a0317?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwyODE0NDJ8MHwxfHNlYXJjaHw4fHx3b3JkfGVufDB8MHx8fDE2MzkxNTYwMTg&ixlib=rb-1.2.1&q=80&w=200', _img => {
             // this.img = _img
             for (let index = 0; index < 6; index++) {
-                this.imgs.push(_img)
-                this.locationsX[index] = _img.width / 2 + p.width / 8 + ((p.width / 4) * (index % 3));
-                this.locationsY[index] = (_img.height / 2) + ((p.height / 4) * (index % 2));
+                this.imgs[index] = _img
+                this.locationsX[index] = _img.width / 2 + p.width / 8 + ((p.width / 4) * (index % 3)) + this.x;
+                this.locationsY[index] = (_img.height / 2) + ((p.height / 4) * (index % 2)) + this.y;
             }
         })
 
     }
 
     checkPressed(p, index) {
-
         if (p.mouseX > this.locationsX[index] - this.imgs[index].width / 2 && p.mouseX < this.locationsX[index] + this.imgs[index].width / 2) {
             if (p.mouseY > this.locationsY[index] - this.imgs[index].height / 2 && p.mouseY < this.locationsY[index] + this.imgs[index].height / 2) {
-                console.log(`YESS ${index} was pressed!!!` )
                 return true
             } else {
-                // console.log(`0 was NOT pressed!!!` )
                 return false
             }
         } else {
-            // console.log(`0 was NOT pressed!!!` )
             return false
         }
-
     }
 
-    update(p, _photodata) {
-        console.dir(_photodata)
-        if (_photodata == undefined) return
-        p.loadImage(_photodata.urls.thumb, _img => {
-            // this.img = _img
-            this.imgs.shift()
-            this.imgs.push(_img)
-        })
+    checkOver(p, imgDragged, card, index){
+        if (this.locationsX[imgDragged] > card.locationsX[index] - card.imgs[index].width / 2 && this.locationsX[imgDragged] < card.locationsX[index] + card.imgs[index].width ) {
+            if (this.locationsY[imgDragged] > card.locationsY[index] - card.imgs[index].height / 2 && this.locationsY[imgDragged] < card.locationsY[index] + card.imgs[index].height) {
+                return true
+            } else {
+                return false
+            }
+        } else {
+            return false
+        }
     }
 
     makeHexString = (length = 6) => {
@@ -74,22 +71,9 @@ class Card {
     }
 
     show(p) {
-        // if (this.img == undefined) return
         for (let index = 0; index < 6; index++) {
-            this._indexx++
-            if (this._indexx % 3 === 0) {
-                this._indexx = 0
-                this._indexy++
-                if (this._indexy % 2 === 0) {
-                    this._indexy = 0
-                    this._indexx = 0
-                }
-            }
-            let imageIndex = this._indexx + (this._indexy * 3)
-            const localImg = this.imgs[imageIndex];
-            if (localImg == undefined) return
-            p.image(localImg, this.locationsX[imageIndex], this.locationsY[imageIndex])
+            if (this.imgs[index] == undefined) return
+            p.image(this.imgs[index], this.locationsX[index], this.locationsY[index])
         }
-
     }
 }
