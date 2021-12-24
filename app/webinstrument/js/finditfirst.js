@@ -12,7 +12,8 @@ let sketch = (p) => {
 
 	let micarta
 	let cartaopuesta
-	let card = []
+	let bufferDeckData = []
+	let bufferDeckImgs = []
 
 	let draw_allowed;
 	let draw_1, d1, t1, t2
@@ -67,6 +68,25 @@ let sketch = (p) => {
 		socket.emit(`server`, signedCommands + `;` + currentJWT)
 	}
 
+	let encodeSendJWTRequestBuffer = () => {
+
+		let currentJWT = window.localStorage.getItem('userJWT')
+		let oHeader = {
+			alg: 'HS256',
+			typ: 'JWT'
+		}
+
+		let oPayload = {
+			"user": {
+				"buffer": "request",
+			}
+		}
+		let sHeader = JSON.stringify(oHeader)
+		let sPayload = JSON.stringify(oPayload)
+		let signedCommands = KJUR.jws.JWS.sign("HS256", sHeader, sPayload, currentJWT)
+		socket.emit(`server`, signedCommands + `;` + currentJWT)
+	}
+
 	p.preload = () => {
 
 
@@ -94,7 +114,15 @@ let sketch = (p) => {
 		})
 		socket.on('channel01',
 			(data) => {
-				console.log(data)
+				if (bufferDeckData.length > 15) {
+					bufferDeckData.shift()
+					bufferDeckImgs.shift()
+				}
+				
+				p.loadImage(data.urls.thumb, _img => {
+					bufferDeckImgs.push(_img)
+					bufferDeckData.push(data)
+				})
 			}
 		)
 		socket.on('channel02',
@@ -104,10 +132,11 @@ let sketch = (p) => {
 					micarta.imgs = []
 					micarta.data = []
 				}
-				p.loadImage(data.urls.thumb, _img => {
-					micarta.imgs.push(_img)
-					micarta.data.push(data)
-				})
+
+				let rn = Math.floor(Math.random() * bufferDeckImgs.length)
+				micarta.imgs.push(bufferDeckImgs[rn])
+				micarta.data.push(bufferDeckData[rn])
+
 			}
 		)
 		socket.on(`channel03`,
@@ -117,12 +146,20 @@ let sketch = (p) => {
 					cartaopuesta.imgs = []
 					cartaopuesta.data = []
 				}
-				p.loadImage(data.urls.thumb, _img => {
-					cartaopuesta.imgs.push(_img)
-					cartaopuesta.data.push(data)
-				})
+				let rn = Math.floor(Math.random() * bufferDeckImgs.length)
+				cartaopuesta.imgs.push(bufferDeckImgs[rn])
+				cartaopuesta.data.push(bufferDeckData[rn])
+
+				// p.loadImage(data.urls.thumb, _img => {
+				// 	cartaopuesta.imgs.push(_img)
+				// 	cartaopuesta.data.push(data)
+				// })
 			}
 		)
+
+		encodeSendJWTRequestBuffer()
+
+
 		cartaopuesta = new Card(0, 0)
 		cartaopuesta.initCards(p)
 

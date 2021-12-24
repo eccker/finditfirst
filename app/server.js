@@ -252,17 +252,33 @@ io.on('connection', (socket) => {
 							} else {
 								// parse JSON string to JSON object
 								const objectFromFile = JSON.parse(data);
-								const objFromFileThumbURL = objectFromFile[Math.floor(Math.random() * (objectFromFile.length))];
-								console.log(`objFromFileThumbURL is: ${objFromFileThumbURL.urls.thumb}`)
-								io.emit(`channel02`, objFromFileThumbURL)
+								const objFromFile = objectFromFile[Math.floor(Math.random() * (objectFromFile.length))];
+								console.log(`objFromFileThumbURL is: ${objFromFile.urls.thumb}`)
+								io.emit(`channel02`, objFromFile)
 							}
 						});
 					});
 
 
 				}
-				if (key === 'color') {
-					io.emit(`channel01`, decoded2.user.color)
+				if (key === 'buffer') {
+					for (let idxBuff = 0; idxBuff < 16; idxBuff++) {
+						fs.readdir(`./data`, (err, files) => {
+							let filetoopen = files[Math.floor(Math.random() * (files.length + 1))]
+							console.log(filetoopen)
+							fs.readFile(`./data/${filetoopen}`, 'utf8', (err, data) => {
+								if (err) {
+									console.log(`Error reading file from disk: ${err}`);
+								} else {
+									// parse JSON string to JSON object
+									const objectFromFile = JSON.parse(data);
+									const objFromFile = objectFromFile[Math.floor(Math.random() * (objectFromFile.length))];
+									console.log(`objFromFile is: ${objFromFile.urls.thumb}`)
+									io.emit(`channel01`, objFromFile)
+								}
+							});
+						});						
+					}
 				}
 				if (key === 'mouseX') {
 					io.emit(`channel02`, [decoded2.user.mouseX, decoded2.user.mouseY])
