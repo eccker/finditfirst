@@ -12,16 +12,9 @@ let sketch = (p) => {
 
 	let micarta
 	let cartaopuesta
-	let misCartas = []
-	let photodata
-
-	let cards = []
-	let _indexx = 0
-	let _indexy = 0
+	let card = []
 
 	let draw_allowed;
-	let x1 = 100,
-		y1 = 100
 	let draw_1, d1, t1, t2
 
 
@@ -75,7 +68,6 @@ let sketch = (p) => {
 	}
 
 	p.preload = () => {
-		cards[0] = p.loadImage('https://images.unsplash.com/photo-1451226428352-cf66bf8a0317?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=MnwyODE0NDJ8MHwxfHNlYXJjaHw4fHx3b3JkfGVufDB8MHx8fDE2MzkxNTYwMTg&ixlib=rb-1.2.1&q=80&w=200');
 
 
 	}
@@ -150,7 +142,6 @@ let sketch = (p) => {
 	p.windowResized = () => {
 		p.resizeCanvas(p.windowWidth, p.windowHeight)
 		p.background(10, 10, 10, 251)
-		// p.background(p.random(19, 28), p.random(26, 28), p.random(26, 35), 255)
 	}
 
 	p.draw = () => {
