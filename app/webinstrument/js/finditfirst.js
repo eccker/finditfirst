@@ -219,6 +219,14 @@ let sketch = (p) => {
 
 	p.windowResized = () => {
 		p.resizeCanvas(p.windowWidth, p.windowHeight)
+		myDeckBtn.position( 14 * p.width / 16, 8 * p.height / 16);
+		myDeckBtn.style('position','fixed')
+
+		opDeckBtn.position( 14 * p.width / 16, 7 * p.height / 16);
+		opDeckBtn.style('position','fixed')
+		micarta.initCardsLocations(p)
+		cartaopuesta.initCardsLocations(p)
+
 		p.background(10, 10, 10, 251)
 	}
 
