@@ -11,7 +11,7 @@ let sketch = (p) => {
 	let someHeartBeatPeriod = 0
 	let minTime = 12.0
 	let ranTime = 68.0
-	let bleedRate = 0.016
+	let bleedRate = 0.16
 
 	let micarta
 	let cartaopuesta
@@ -31,6 +31,10 @@ let sketch = (p) => {
 	let verifyWon = false
 	let myDeckBtn
 	let opDeckBtn
+
+	
+    let channel
+
 
 
 	let makeHexString = (length = 6) => {
@@ -74,6 +78,7 @@ let sketch = (p) => {
 		let oPayload = {
 			"user": {
 				"data": _dataToSend,
+				"channel": channel
 			}
 		}
 		let sHeader = JSON.stringify(oHeader)
@@ -93,6 +98,7 @@ let sketch = (p) => {
 		let oPayload = {
 			"user": {
 				"buffer": buffLength,
+				"channel": channel,
 			}
 		}
 		let sHeader = JSON.stringify(oHeader)
@@ -116,6 +122,14 @@ let sketch = (p) => {
 		p.background(127) // clear the screen
 		p.imageMode(p.CENTER);
 		draw_allowed = true;
+		const _URL = window.location.search
+		console.log(`URL is: ${_URL}`);
+	
+		const urlParams = new URLSearchParams(_URL);
+		console.log(urlParams.get('channel'))
+    	channel = urlParams.get('channel')?urlParams.get('channel'):`channel000`
+		console.log(`channel is: ${channel}`)
+
 
 		socket = io({
 			transports: ['websocket']
@@ -126,7 +140,7 @@ let sketch = (p) => {
 		socket.on('disconnect', () => {
 			socket.removeAllListeners()
 		})
-		socket.on('channel01',
+		socket.on(channel,
 			(data) => {
 				if (bufferDeckData.length > (difficulty - 1)) {
 					bufferDeckData.shift()
@@ -139,32 +153,32 @@ let sketch = (p) => {
 				})
 			}
 		)
-		socket.on('channel02',
-			(data) => {
-				if (data == undefined) return
-				if (micarta.imgs.length > 5) {
-					micarta.imgs = []
-					micarta.data = []
-				}
+		// socket.on('channel02',
+		// 	(data) => {
+		// 		if (data == undefined) return
+		// 		if (micarta.imgs.length > 5) {
+		// 			micarta.imgs = []
+		// 			micarta.data = []
+		// 		}
 
-				let rn = Math.floor(Math.random() * bufferDeckImgs.length)
-				micarta.imgs.push(bufferDeckImgs[rn])
-				micarta.data.push(bufferDeckData[rn])
+		// 		let rn = Math.floor(Math.random() * bufferDeckImgs.length)
+		// 		micarta.imgs.push(bufferDeckImgs[rn])
+		// 		micarta.data.push(bufferDeckData[rn])
 
-			}
-		)
-		socket.on(`channel03`,
-			(data) => {
-				if (data == undefined) return
-				if (cartaopuesta.imgs.length > 5) {
-					cartaopuesta.imgs = []
-					cartaopuesta.data = []
-				}
-				let rn = Math.floor(Math.random() * bufferDeckImgs.length)
-				cartaopuesta.imgs.push(bufferDeckImgs[rn])
-				cartaopuesta.data.push(bufferDeckData[rn])
-			}
-		)
+		// 	}
+		// )
+		// socket.on(`channel03`,
+		// 	(data) => {
+		// 		if (data == undefined) return
+		// 		if (cartaopuesta.imgs.length > 5) {
+		// 			cartaopuesta.imgs = []
+		// 			cartaopuesta.data = []
+		// 		}
+		// 		let rn = Math.floor(Math.random() * bufferDeckImgs.length)
+		// 		cartaopuesta.imgs.push(bufferDeckImgs[rn])
+		// 		cartaopuesta.data.push(bufferDeckData[rn])
+		// 	}
+		// )
 		difficulty = 16
 		encodeSendJWTRequestBuffer(difficulty)
 
@@ -175,11 +189,21 @@ let sketch = (p) => {
 		micarta = new Card(0, p.height / 2)
 		micarta.initCards(p)
 
+		// while (micarta.imgs.length < 7) {
+		// 	console.log(`micarta.imgs.length is: ${micarta.imgs.length} `)
+		// }
 
-		const objectToSend = micarta.objs[Math.floor(Math.random() * micarta.objs.length)]
-		for (let index = 0; index < 6; index++) {
-			encodeSendJWTData(objectToSend)
-		}
+		// for (let index = 0; index < 6; index++) {
+		// 	let rn = Math.floor(Math.random() * bufferDeckImgs.length)
+		// 	micarta.imgs.push(bufferDeckImgs[rn])
+		// 	micarta.data.push(bufferDeckData[rn])
+		// 	rn = Math.floor(Math.random() * bufferDeckImgs.length)
+		// 	cartaopuesta.imgs.push(bufferDeckImgs[rn])
+		// 	cartaopuesta.data.push(bufferDeckData[rn])
+		// }
+		// micarta.initCardsLocations(p)
+
+
 		someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * ranTime) + minTime)
 		draw_allowed = true;
 		p.background(10, 10, 10, 251)
@@ -399,19 +423,15 @@ let sketch = (p) => {
 		}
 		if (p.key === ' ') {
 			if (gameStatus === `ready` || gameStatus === `won`) {
-
+    
 				micarta.initCardsLocations(p)
 				gameStatus = `playing`
 
 				elapsedTime = 0
 				lastGeneratedTime = p.millis()
-				
-
 				someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * ranTime) + minTime)
 				tempcol = "#" + makeHexString(6)
 
-
-				const objectToSend = micarta.objs[Math.floor(Math.random() * micarta.objs.length)]
 				for (let index = 0; index < 6; index++) {
 					if (cartaopuesta.imgs.length > 5) {
 						cartaopuesta.imgs = []

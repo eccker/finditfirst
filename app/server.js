@@ -253,7 +253,7 @@ io.on('connection', (socket) => {
 								// parse JSON string to JSON object
 								const objectFromFile = JSON.parse(data);
 								const objFromFile = objectFromFile[Math.floor(Math.random() * (objectFromFile.length))];
-								console.log(`objFromFileThumbURL is: ${objFromFile.urls.thumb}`)
+								// console.log(`objFromFileThumbURL is: ${objFromFile.urls.thumb}`)
 								io.emit(`channel02`, objFromFile)
 							}
 						});
@@ -262,7 +262,8 @@ io.on('connection', (socket) => {
 
 				}
 				if (key === 'buffer') {
-					let buffLenght = decoded2.user.buffer;
+					let buffLenght = decoded2.user.buffer
+					let chnnl = decoded2.user.channel
 					for (let idxBuff = 0; idxBuff < buffLenght; idxBuff++) {
 						fs.readdir(`./data`, (err, files) => {
 							let filetoopen = files[Math.floor(Math.random() * (files.length + 1))]
@@ -271,38 +272,37 @@ io.on('connection', (socket) => {
 								if (err) {
 									console.log(`Error reading file from disk: ${err}`);
 								} else {
-									// parse JSON string to JSON object
 									const objectFromFile = JSON.parse(data);
 									const objFromFile = objectFromFile[Math.floor(Math.random() * (objectFromFile.length))];
-									console.log(`objFromFile is: ${objFromFile.urls.thumb}`)
-									io.emit(`channel01`, objFromFile)
+									console.log(`On channel: ${chnnl}`)
+									io.emit(chnnl, objFromFile)
 								}
 							});
 						});						
 					}
 				}
-				if (key === 'mouseX') {
-					io.emit(`channel02`, [decoded2.user.mouseX, decoded2.user.mouseY])
-				}
-				if (key === 'object') {
-					console.log(decoded2.user.object)
-					fs.readdir(`./data`, (err, files) => {
-						let filetoopen = files[Math.floor(Math.random() * (files.length + 1))]
-						console.log(filetoopen)
-						fs.readFile(`./data/${filetoopen}`, 'utf8', (err, data) => {
-							if (err) {
-								console.log(`Error reading file from disk: ${err}`);
-							} else {
-								// parse JSON string to JSON object
-								const objectFromFile = JSON.parse(data);
-								const objFromFileThumbURL = objectFromFile[Math.floor(Math.random() * (objectFromFile.length))];
-								console.log(`objFromFileThumbURL is: ${objFromFileThumbURL.urls.thumb}`)
-								io.emit(`channel03`, objFromFileThumbURL)
-							}
-						});
-					});
+				// if (key === 'mouseX') {
+				// 	io.emit(`channel02`, [decoded2.user.mouseX, decoded2.user.mouseY])
+				// }
+				// if (key === 'object') {
+				// 	console.log(decoded2.user.object)
+				// 	fs.readdir(`./data`, (err, files) => {
+				// 		let filetoopen = files[Math.floor(Math.random() * (files.length + 1))]
+				// 		console.log(filetoopen)
+				// 		fs.readFile(`./data/${filetoopen}`, 'utf8', (err, data) => {
+				// 			if (err) {
+				// 				console.log(`Error reading file from disk: ${err}`);
+				// 			} else {
+				// 				// parse JSON string to JSON object
+				// 				const objectFromFile = JSON.parse(data);
+				// 				const objFromFileThumbURL = objectFromFile[Math.floor(Math.random() * (objectFromFile.length))];
+				// 				console.log(`objFromFileThumbURL is: ${objFromFileThumbURL.urls.thumb}`)
+				// 				io.emit(`channel03`, objFromFileThumbURL)
+				// 			}
+				// 		});
+				// 	});
 
-				}
+				// }
 
 			})
 
