@@ -26,6 +26,8 @@ let sketch = (p) => {
 
 	let gameStatus = `ready`
 	let verifyWon = false
+	let myDeckBtn
+	let opDeckBtn
 
 
 	let makeHexString = (length = 6) => {
@@ -178,6 +180,41 @@ let sketch = (p) => {
 		someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * 32) + 1)
 		draw_allowed = true;
 		p.background(10, 10, 10, 251)
+		myDeckBtn = p.createButton('Get Deck [m]');
+		myDeckBtn.position( 14 * p.width / 16, 8 * p.height / 16);
+		myDeckBtn.style('position','fixed')
+		myDeckBtn.hide()
+		myDeckBtn.mousePressed( () => {
+			if (gameStatus === `playing`) {
+				for (let index = 0; index < 6; index++) {
+					if (micarta.imgs.length > 5) {
+						micarta.imgs = []
+						micarta.data = []
+					}
+					let rn = Math.floor(Math.random() * bufferDeckImgs.length)
+					micarta.imgs.push(bufferDeckImgs[rn])
+					micarta.data.push(bufferDeckData[rn])
+				}
+			}
+		})
+
+		opDeckBtn = p.createButton('Get Deck [b]');
+		opDeckBtn.position( 14 * p.width / 16, 7 * p.height / 16);
+		opDeckBtn.style('position','fixed')
+		opDeckBtn.mousePressed( () => {
+			if (gameStatus === `playing`) {
+				for (let index = 0; index < 6; index++) {
+					if (cartaopuesta.imgs.length > 5) {
+						cartaopuesta.imgs = []
+						cartaopuesta.data = []
+					}
+					let rn = Math.floor(Math.random() * bufferDeckImgs.length)
+					cartaopuesta.imgs.push(bufferDeckImgs[rn])
+					cartaopuesta.data.push(bufferDeckData[rn])
+				}
+			}
+		})
+
 	}
 
 	p.windowResized = () => {
@@ -192,6 +229,10 @@ let sketch = (p) => {
 		if (gameStatus === `ready`) {
 			p.fill(200, 200, 15);
 			p.text(`Ready? Press [Space Bar] to Start`, 3 * p.width / 8, 7 * p.height / 16)
+			p.text(`How to Play: `, 3 * p.width / 8, 8 * p.height / 16)
+			p.text(`Drag and Drop one image that matches one of the upper 6  `, 3 * p.width / 8, 20 + 8 * p.height / 16)
+			myDeckBtn.hide()
+			opDeckBtn.hide()
 		}
 
 		if (gameStatus === `won`) {
@@ -202,6 +243,9 @@ let sketch = (p) => {
 			p.text(`Last time: ${scores[scores.length-1]}`, 7 * p.width / 8, p.height / 8)
 			p.text(`Difficulty: ${scores.length-1}`, 7 * p.width / 8, 2 * p.height / 8)
 			p.text(`Lifes: ${lifes}`, 7 * p.width / 8, 3 * p.height / 8)
+
+			myDeckBtn.hide()
+			opDeckBtn.hide()
 		}
 
 		if (gameStatus === `lose`) {
@@ -211,8 +255,14 @@ let sketch = (p) => {
 			p.text(`Last time: ${scores[scores.length-1]}`, 7 * p.width / 8, p.height / 8)
 			p.text(`Difficulty: ${scores.length-1}`, 7 * p.width / 8, 2 * p.height / 8)
 			p.text(`Lifes: ${lifes}`, 7 * p.width / 8, 3 * p.height / 8)
+			myDeckBtn.hide()
+			opDeckBtn.hide()
 		}
 		if (gameStatus === `playing`) {
+
+			myDeckBtn.show()
+			opDeckBtn.show()
+
 			// playing
 			if (draw_allowed) {
 				if (draw_1) {
