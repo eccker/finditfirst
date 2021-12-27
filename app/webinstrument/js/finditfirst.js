@@ -20,6 +20,12 @@ let sketch = (p) => {
 	let draw_allowed;
 	let draw_1, d1, t1, t2
 
+	let scores = []
+	let lifes = 3
+	let socket
+
+	let gameStatus = `ready`
+
 
 	let makeHexString = (length = 6) => {
 		let result = ''
@@ -156,7 +162,7 @@ let sketch = (p) => {
 		difficulty = 16
 		encodeSendJWTRequestBuffer(difficulty)
 
-
+		scores[0] = 0
 		cartaopuesta = new Card(0, 0)
 		cartaopuesta.initCards(p)
 
@@ -179,37 +185,86 @@ let sketch = (p) => {
 	}
 
 	p.draw = () => {
-		if (draw_allowed) {
-			if (draw_1) {
+		p.background(10, 10, 10, 251)
+
+		// determine game current state: ready, playing, win, lose
+		if (gameStatus === `ready`) {
+			p.fill(200, 200, 15);
+			p.text(`Ready? Press [Space Bar] to Start`, 4 * p.width / 8, p.height / 2)
+		}
+
+		if (gameStatus === `won`) {
+			p.fill(0, 200, 15);
+			micarta.show(p)
+			p.text(`Good Selection. Press [Space Bar] to continue...`, 3 * p.width / 8, p.height / 2)
+
+			p.text(`Last time: ${scores[scores.length-1]}`, 7 * p.width / 8, p.height / 8)
+			p.text(`Difficulty: ${scores.length-1}`, 7 * p.width / 8, 2 * p.height / 8)
+			p.text(`Lifes: ${lifes}`, 7 * p.width / 8, 3 * p.height / 8)
+		}
+
+		if (gameStatus === `lose`) {
+			p.fill(200, 20, 15);
+			p.text(`Game Over`, 3 * p.width / 8, p.height / 2)
+
+			p.text(`Last time: ${scores[scores.length-1]}`, 7 * p.width / 8, p.height / 8)
+			p.text(`Difficulty: ${scores.length-1}`, 7 * p.width / 8, 2 * p.height / 8)
+			p.text(`Lifes: ${lifes}`, 7 * p.width / 8, 3 * p.height / 8)
+		}
+		if (gameStatus === `playing`) {
+			// playing
+			if (draw_allowed) {
+				if (draw_1) {
+					micarta.locationsX[imgDragged] = p.mouseX - t1;
+					micarta.locationsY[imgDragged] = p.mouseY - t2;
+				}
+			}
+			cartaopuesta.show(p)
+			micarta.show(p)
+			p.fill(0, 200, 15);
+			p.text(`Last time: ${scores[scores.length-1]}`, 7 * p.width / 8, p.height / 8)
+			p.text(`Difficulty: ${scores.length-1}`, 7 * p.width / 8, 2 * p.height / 8)
+			p.text(`Lifes: ${lifes}`, 7 * p.width / 8, 3 * p.height / 8)
+
+			now = p.millis()
+			elapsedTime = now - lastGeneratedTime
+			let altura = p.map(elapsedTime, 0, someHeartBeatPeriod, 0, p.height)
+			if (elapsedTime < someHeartBeatPeriod) {
+				p.fill(tempcol)
+				p.noStroke()
+				p.rect(0, 0, p.width / 8, altura)
+			}
+			if (elapsedTime > someHeartBeatPeriod) {
+				lastGeneratedTime = now
+
+				someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * 48) + 8)
+				tempcol = "#" + makeHexString(6)
+
+				// const objectToSend = micarta.objs[Math.floor(Math.random() * micarta.objs.length)]
+				for (let index = 0; index < 6; index++) {
+					if (cartaopuesta.imgs.length > 5) {
+						cartaopuesta.imgs = []
+						cartaopuesta.data = []
+						micarta.imgs = []
+						micarta.data = []
+						
+					}
+
+					let rn = Math.floor(Math.random() * bufferDeckImgs.length)
+					micarta.imgs.push(bufferDeckImgs[rn])
+					micarta.data.push(bufferDeckData[rn])
+					cartaopuesta.imgs.push(bufferDeckImgs[rn])
+					cartaopuesta.data.push(bufferDeckData[rn])
+				}
+				lifes = lifes - 1
+				if (lifes == 0) {
+					gameStatus = `lose`
+					difficulty = 16
+					encodeSendJWTRequestBuffer(difficulty)
+				}
+
 				p.background(10, 10, 10, 251)
-				micarta.locationsX[imgDragged] = p.mouseX - t1;
-				micarta.locationsY[imgDragged] = p.mouseY - t2;
 			}
-		}
-		cartaopuesta.show(p)
-		micarta.show(p)
-
-		now = p.millis()
-		elapsedTime = now - lastGeneratedTime
-		let altura = p.map(elapsedTime, 0, someHeartBeatPeriod, 0, p.height)
-		if (elapsedTime < someHeartBeatPeriod) {
-			p.fill(tempcol)
-			p.noStroke()
-			p.rect(0, 0, p.width / 8, altura)
-		}
-		if (elapsedTime > someHeartBeatPeriod) {
-			lastGeneratedTime = now
-
-			someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * 48) + 8)
-			tempcol = "#" + makeHexString(8)
-
-			const objectToSend = micarta.objs[Math.floor(Math.random() * micarta.objs.length)]
-			for (let index = 0; index < 6; index++) {
-				encodeSendJWTData(objectToSend)
-				encodeSendJWTMessage(objectToSend)
-
-			}
-			p.background(10, 10, 10, 251)
 		}
 	}
 
@@ -225,7 +280,15 @@ let sketch = (p) => {
 				})
 		}
 
-		if (p.key === 'f') {
+		if (p.key === 'r') {
+			if (gameStatus === `lose`) {
+				gameStatus = `ready`
+				// difficulty = 16
+				scores = []
+				scores[0] = 0
+				lifes = 3
+			}
+
 
 		}
 		if (p.key === 's') {
@@ -254,11 +317,26 @@ let sketch = (p) => {
 		if (p.key === 'N') {
 
 		}
-		if (p.key === 'k') {
+		if (p.key === ' ') {
+			if (gameStatus === `ready` || gameStatus === `won`) {
+				micarta.initCardsLocations(p)
+				gameStatus = `playing`
 
+				elapsedTime = 0
+				lastGeneratedTime = p.millis()
+
+				someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * 48) + 8)
+				tempcol = "#" + makeHexString(6)
+
+
+				const objectToSend = micarta.objs[Math.floor(Math.random() * micarta.objs.length)]
+				for (let index = 0; index < 6; index++) {
+					encodeSendJWTData(objectToSend)
+					encodeSendJWTMessage(objectToSend)
+				}
+			}
 		}
 	}
-
 	p.mousePressed = () => {
 		p.loop()
 		for (let idx = 0; idx < micarta.imgs.length; idx++) {
@@ -276,39 +354,21 @@ let sketch = (p) => {
 	p.mouseReleased = () => {
 		draw_allowed = false;
 		draw_1 = false;
-		for (let idx = 0; idx < micarta.imgs.length; idx++) {
+		for (let idx = 0; idx < cartaopuesta.imgs.length; idx++) {
 			if (micarta.checkOver(p, imgDragged, cartaopuesta, idx)) {
 				console.log(`my card ${imgDragged} is over card ${idx}`)
 				let thisImgData = micarta.data[imgDragged]
 				console.log(`It took you ${elapsedTime/1000} s to complete`)
 				p.background(10, 10, 10, 251)
 				if (thisImgData.id === cartaopuesta.data[idx].id) {
-					console.log(`Incredible, you found a match! it took you ${elapsedTime} ms to complete`)
+					console.log(`Incredible, you found a match! it took you ${Math.floor(elapsedTime)} ms to complete`)
+					scores.push(Math.floor(elapsedTime))
 					micarta.locationsX[imgDragged] = cartaopuesta.locationsX[idx]
 					micarta.locationsY[imgDragged] = cartaopuesta.locationsY[idx]
-					p.noLoop()
-
-					lastGeneratedTime = now
-
-					someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * 48) + 8)
-					tempcol = "#" + makeHexString(8)
+					gameStatus = `won`
 					difficulty++
 					encodeSendJWTRequestBuffer(difficulty)
-
-					const objectToSend = micarta.objs[Math.floor(Math.random() * micarta.objs.length)]
-					for (let index = 0; index < 6; index++) {
-						encodeSendJWTData(objectToSend)
-						encodeSendJWTMessage(objectToSend)
-					}
 					p.background(10, 10, 10, 251)
-					// micarta.locationsX[imgDragged] = micarta.imgs[imgDragged].width / 2 + p.width / 8 + ((p.width / 4) * (imgDragged % 3)) + micarta.x;
-					// if (imgDragged < 3) {
-					// 	micarta.locationsY[imgDragged] = (micarta.imgs[imgDragged].height / 2) + ((p.height / 4) * (0)) + micarta.y;
-					// } else {
-					// 	micarta.locationsY[imgDragged] = (micarta.imgs[imgDragged].height / 2) + ((p.height / 4) * (1)) + micarta.y;
-					// }
-					
-
 				} else {
 					micarta.locationsX[imgDragged] = micarta.imgs[imgDragged].width / 2 + p.width / 8 + ((p.width / 4) * (imgDragged % 3)) + micarta.x;
 					if (imgDragged < 3) {
