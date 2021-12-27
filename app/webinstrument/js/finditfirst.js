@@ -25,6 +25,7 @@ let sketch = (p) => {
 	let socket
 
 	let gameStatus = `ready`
+	let verifyWon = false
 
 
 	let makeHexString = (length = 6) => {
@@ -190,13 +191,13 @@ let sketch = (p) => {
 		// determine game current state: ready, playing, win, lose
 		if (gameStatus === `ready`) {
 			p.fill(200, 200, 15);
-			p.text(`Ready? Press [Space Bar] to Start`, 4 * p.width / 8, p.height / 2)
+			p.text(`Ready? Press [Space Bar] to Start`, 3 * p.width / 8, 7 * p.height / 16)
 		}
 
 		if (gameStatus === `won`) {
 			p.fill(0, 200, 15);
 			micarta.show(p)
-			p.text(`Good Selection. Press [Space Bar] to continue...`, 3 * p.width / 8, p.height / 2)
+			p.text(`Good Selection. Press [Space Bar] to continue...`, 3 * p.width / 8, 7 * p.height / 16)
 
 			p.text(`Last time: ${scores[scores.length-1]}`, 7 * p.width / 8, p.height / 8)
 			p.text(`Difficulty: ${scores.length-1}`, 7 * p.width / 8, 2 * p.height / 8)
@@ -205,7 +206,7 @@ let sketch = (p) => {
 
 		if (gameStatus === `lose`) {
 			p.fill(200, 20, 15);
-			p.text(`Game Over`, 3 * p.width / 8, p.height / 2)
+			p.text(`Game Over. Press [r] to restart the Game`, 3 * p.width / 8, p.height / 2)
 
 			p.text(`Last time: ${scores[scores.length-1]}`, 7 * p.width / 8, p.height / 8)
 			p.text(`Difficulty: ${scores.length-1}`, 7 * p.width / 8, 2 * p.height / 8)
@@ -247,12 +248,13 @@ let sketch = (p) => {
 						cartaopuesta.data = []
 						micarta.imgs = []
 						micarta.data = []
-						
+
 					}
 
 					let rn = Math.floor(Math.random() * bufferDeckImgs.length)
 					micarta.imgs.push(bufferDeckImgs[rn])
 					micarta.data.push(bufferDeckData[rn])
+					rn = Math.floor(Math.random() * bufferDeckImgs.length)
 					cartaopuesta.imgs.push(bufferDeckImgs[rn])
 					cartaopuesta.data.push(bufferDeckData[rn])
 				}
@@ -295,15 +297,30 @@ let sketch = (p) => {
 
 		}
 		if (p.key === 'b') {
-			const objectToSend = cartaopuesta.objs[Math.floor(Math.random() * micarta.objs.length)]
-			for (let index = 0; index < 6; index++) {
-				encodeSendJWTMessage(objectToSend)
+			if (gameStatus === `playing`) {
+				for (let index = 0; index < 6; index++) {
+					if (cartaopuesta.imgs.length > 5) {
+						cartaopuesta.imgs = []
+						cartaopuesta.data = []
+					}
+					let rn = Math.floor(Math.random() * bufferDeckImgs.length)
+					cartaopuesta.imgs.push(bufferDeckImgs[rn])
+					cartaopuesta.data.push(bufferDeckData[rn])
+				}
 			}
 		}
 		if (p.key === 'm') {
-			const objectToSend = micarta.objs[Math.floor(Math.random() * micarta.objs.length)]
-			for (let index = 0; index < 6; index++) {
-				encodeSendJWTData(objectToSend)
+			if (gameStatus === `playing`) {
+				for (let index = 0; index < 6; index++) {
+					if (micarta.imgs.length > 5) {
+						micarta.imgs = []
+						micarta.data = []
+
+					}
+					let rn = Math.floor(Math.random() * bufferDeckImgs.length)
+					micarta.imgs.push(bufferDeckImgs[rn])
+					micarta.data.push(bufferDeckData[rn])
+				}
 			}
 		}
 		if (p.key === 'B') {
@@ -319,6 +336,7 @@ let sketch = (p) => {
 		}
 		if (p.key === ' ') {
 			if (gameStatus === `ready` || gameStatus === `won`) {
+
 				micarta.initCardsLocations(p)
 				gameStatus = `playing`
 
@@ -331,9 +349,23 @@ let sketch = (p) => {
 
 				const objectToSend = micarta.objs[Math.floor(Math.random() * micarta.objs.length)]
 				for (let index = 0; index < 6; index++) {
-					encodeSendJWTData(objectToSend)
-					encodeSendJWTMessage(objectToSend)
+					if (cartaopuesta.imgs.length > 5) {
+						cartaopuesta.imgs = []
+						cartaopuesta.data = []
+						micarta.imgs = []
+						micarta.data = []
+
+					}
+
+					let rn = Math.floor(Math.random() * bufferDeckImgs.length)
+					micarta.imgs.push(bufferDeckImgs[rn])
+					micarta.data.push(bufferDeckData[rn])
+
+					rn = Math.floor(Math.random() * bufferDeckImgs.length)
+					cartaopuesta.imgs.push(bufferDeckImgs[rn])
+					cartaopuesta.data.push(bufferDeckData[rn])
 				}
+				verifyWon = false
 			}
 		}
 	}
@@ -360,7 +392,8 @@ let sketch = (p) => {
 				let thisImgData = micarta.data[imgDragged]
 				console.log(`It took you ${elapsedTime/1000} s to complete`)
 				p.background(10, 10, 10, 251)
-				if (thisImgData.id === cartaopuesta.data[idx].id) {
+				if (thisImgData.id === cartaopuesta.data[idx].id && !verifyWon) {
+					verifyWon = true
 					console.log(`Incredible, you found a match! it took you ${Math.floor(elapsedTime)} ms to complete`)
 					scores.push(Math.floor(elapsedTime))
 					micarta.locationsX[imgDragged] = cartaopuesta.locationsX[idx]
@@ -369,7 +402,7 @@ let sketch = (p) => {
 					difficulty++
 					encodeSendJWTRequestBuffer(difficulty)
 					p.background(10, 10, 10, 251)
-				} else {
+				} else if (!verifyWon) {
 					micarta.locationsX[imgDragged] = micarta.imgs[imgDragged].width / 2 + p.width / 8 + ((p.width / 4) * (imgDragged % 3)) + micarta.x;
 					if (imgDragged < 3) {
 						micarta.locationsY[imgDragged] = (micarta.imgs[imgDragged].height / 2) + ((p.height / 4) * (0)) + micarta.y;
