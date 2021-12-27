@@ -150,8 +150,10 @@ class Card {
     }
 
     checkOver(p, imgDragged, card, index) {
-        if (this.locationsX[imgDragged] > card.locationsX[index] - card.imgs[index].width / 2 && this.locationsX[imgDragged] < card.locationsX[index] + card.imgs[index].width) {
-            if (this.locationsY[imgDragged] > card.locationsY[index] - card.imgs[index].height / 2 && this.locationsY[imgDragged] < card.locationsY[index] + card.imgs[index].height) {
+        if (this.locationsX[imgDragged] > card.locationsX[index] - card.imgs[index].width / 2 && this.locationsX[imgDragged] < card.locationsX[index] + card.imgs[index].width ||
+            p.mouseX > card.locationsX[index] - card.imgs[index].width / 2 && p.mouseX < card.locationsX[index] + card.imgs[index].width) {
+            if (this.locationsY[imgDragged] > card.locationsY[index] - card.imgs[index].height / 2 && this.locationsY[imgDragged] < card.locationsY[index] + card.imgs[index].height ||
+                p.mouseY > card.locationsY[index] - card.imgs[index].height / 2 && p.mouseY < card.locationsY[index] + card.imgs[index].height) {
                 return true
             } else {
                 return false

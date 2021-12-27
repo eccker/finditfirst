@@ -9,6 +9,9 @@ let sketch = (p) => {
 	let elapsedTime
 	let tempcol = `#33ffccff`
 	let someHeartBeatPeriod = 0
+	let minTime = 12.0
+	let ranTime = 68.0
+	let bleedRate = 0.016
 
 	let micarta
 	let cartaopuesta
@@ -177,7 +180,7 @@ let sketch = (p) => {
 		for (let index = 0; index < 6; index++) {
 			encodeSendJWTData(objectToSend)
 		}
-		someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * 32) + 1)
+		someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * ranTime) + minTime)
 		draw_allowed = true;
 		p.background(10, 10, 10, 251)
 		myDeckBtn = p.createButton('Get Deck [m]');
@@ -296,7 +299,7 @@ let sketch = (p) => {
 			if (elapsedTime > someHeartBeatPeriod) {
 				lastGeneratedTime = now
 
-				someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * 48) + 8)
+				someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * ranTime) + minTime)
 				tempcol = "#" + makeHexString(6)
 
 				// const objectToSend = micarta.objs[Math.floor(Math.random() * micarta.objs.length)]
@@ -318,7 +321,7 @@ let sketch = (p) => {
 				}
 				lifes = lifes - 1
 				if (lifes == 0) {
-					gameStatus = `lose`
+					gameStatus = `lose`	
 					difficulty = 16
 					encodeSendJWTRequestBuffer(difficulty)
 				}
@@ -344,6 +347,8 @@ let sketch = (p) => {
 			if (gameStatus === `lose`) {
 				gameStatus = `ready`
 				// difficulty = 16
+				minTime = 12.0
+				ranTime = 68.0
 				scores = []
 				scores[0] = 0
 				lifes = 3
@@ -400,8 +405,9 @@ let sketch = (p) => {
 
 				elapsedTime = 0
 				lastGeneratedTime = p.millis()
+				
 
-				someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * 48) + 8)
+				someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * ranTime) + minTime)
 				tempcol = "#" + makeHexString(6)
 
 
@@ -459,6 +465,15 @@ let sketch = (p) => {
 					gameStatus = `won`
 					difficulty++
 					encodeSendJWTRequestBuffer(difficulty)
+					ranTime -= 1
+					minTime -= bleedRate
+					if (ranTime < 12.0) {
+						ranTime = 12.0
+					}
+					if (minTime < 4.0) {
+						minTime = 4.0
+					}
+					console.log(`ranTime: ${ranTime} minTime: ${minTime}`)
 					p.background(10, 10, 10, 251)
 				} else if (!verifyWon) {
 					micarta.locationsX[imgDragged] = micarta.imgs[imgDragged].width / 2 + p.width / 8 + ((p.width / 4) * (imgDragged % 3)) + micarta.x;
