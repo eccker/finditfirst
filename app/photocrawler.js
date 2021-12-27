@@ -97,7 +97,7 @@ setInterval(() => {
 						// io.to(socket.id).emit(`channel03`, currentResult)
 					} else {
 						unsplash.search.getPhotos({
-							query: 'cat',
+							query: Math.floor(Math.random()*2)===0?`cat`:`dog`,
 							page: 1,
 							perPage: 100,
 							orientation: 'landscape',
