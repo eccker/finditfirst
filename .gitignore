@@ -508,4 +508,7 @@ MigrationBackup/
 .history
 .ionide
 
-app/webinstrument/build/es6-bundled/*
+app/webinstrument/build/**/*
+
+app/node_modules
+.env
