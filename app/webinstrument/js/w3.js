@@ -154,7 +154,7 @@ let loadMyNFTs = async () => {
     }))
     return items
 }
-let buyNft = () =>{
+let buyNft = async() =>{
     const provider = new ethers.providers.Web3Provider(window.ethereum);
     const signer = provider.getSigner()
     const contract = new ethers.Contract(marketAddress, NFTMarket.abi, signer)

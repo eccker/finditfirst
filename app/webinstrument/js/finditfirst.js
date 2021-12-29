@@ -153,56 +153,16 @@ let sketch = (p) => {
 				})
 			}
 		)
-		// socket.on('channel02',
-		// 	(data) => {
-		// 		if (data == undefined) return
-		// 		if (micarta.imgs.length > 5) {
-		// 			micarta.imgs = []
-		// 			micarta.data = []
-		// 		}
-
-		// 		let rn = Math.floor(Math.random() * bufferDeckImgs.length)
-		// 		micarta.imgs.push(bufferDeckImgs[rn])
-		// 		micarta.data.push(bufferDeckData[rn])
-
-		// 	}
-		// )
-		// socket.on(`channel03`,
-		// 	(data) => {
-		// 		if (data == undefined) return
-		// 		if (cartaopuesta.imgs.length > 5) {
-		// 			cartaopuesta.imgs = []
-		// 			cartaopuesta.data = []
-		// 		}
-		// 		let rn = Math.floor(Math.random() * bufferDeckImgs.length)
-		// 		cartaopuesta.imgs.push(bufferDeckImgs[rn])
-		// 		cartaopuesta.data.push(bufferDeckData[rn])
-		// 	}
-		// )
+		
 		difficulty = 16
 		encodeSendJWTRequestBuffer(difficulty)
 
 		scores[0] = 0
-		cartaopuesta = new Card(0, 0)
+		cartaopuesta = new card(0, 0)
 		cartaopuesta.initCards(p)
 
-		micarta = new Card(0, p.height / 2)
+		micarta = new card(0, p.height / 2)
 		micarta.initCards(p)
-
-		// while (micarta.imgs.length < 7) {
-		// 	console.log(`micarta.imgs.length is: ${micarta.imgs.length} `)
-		// }
-
-		// for (let index = 0; index < 6; index++) {
-		// 	let rn = Math.floor(Math.random() * bufferDeckImgs.length)
-		// 	micarta.imgs.push(bufferDeckImgs[rn])
-		// 	micarta.data.push(bufferDeckData[rn])
-		// 	rn = Math.floor(Math.random() * bufferDeckImgs.length)
-		// 	cartaopuesta.imgs.push(bufferDeckImgs[rn])
-		// 	cartaopuesta.data.push(bufferDeckData[rn])
-		// }
-		// micarta.initCardsLocations(p)
-
 
 		someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * ranTime) + minTime)
 		draw_allowed = true;

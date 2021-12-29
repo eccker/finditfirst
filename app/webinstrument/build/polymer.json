@@ -29,7 +29,9 @@
       "html": {
         "minify": true
       },
-      "bundle": true,
+      "bundle": {
+        "exclude": "./js/card.js"
+      },
       "addServiceWorker": true,
       "addPushManifest": false,
       "preset": "es6-bundled"

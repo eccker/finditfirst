@@ -9,7 +9,12 @@
 		"manifest.json",
 		"js/**/*"
 	],
-	"builds": [{ "preset": "es6-bundled" }],
+	"builds": [{
+		"preset": "es6-bundled",
+		"bundle": {
+			"exclude": "./js/card.js"
+		}
+	}],
 	"moduleResolution": "node",
 	"npm": true,
 	"lint": {
