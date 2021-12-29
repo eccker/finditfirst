@@ -414,17 +414,47 @@ let sketch = (p) => {
 		}
 	}
 	p.mousePressed = () => {
-		p.loop()
-		for (let idx = 0; idx < micarta.imgs.length; idx++) {
-			if (micarta.checkPressed(p, idx)) {
-				console.log(`pressed ${idx}`)
-				draw_allowed = true;
-				imgDragged = idx
-				t1 = p.map(p.mouseX - (micarta.locationsX[idx] - micarta.imgs[idx].width / 2), 0, micarta.imgs[idx].width, -micarta.imgs[idx].width / 2, micarta.imgs[idx].width / 2)
-				t2 = p.map(p.mouseY - (micarta.locationsY[idx] - micarta.imgs[idx].height / 2), 0, micarta.imgs[idx].height, -micarta.imgs[idx].height / 2, micarta.imgs[idx].height / 2)
-				d1 = 0;
+		if (gameStatus === `ready` || gameStatus === `won`) {
+    
+			micarta.initCardsLocations(p)
+			gameStatus = `playing`
+
+			elapsedTime = 0
+			lastGeneratedTime = p.millis()
+			someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * ranTime) + minTime)
+			tempcol = "#" + makeHexString(6)
+
+			for (let index = 0; index < 6; index++) {
+				if (cartaopuesta.imgs.length > 5) {
+					cartaopuesta.imgs = []
+					cartaopuesta.data = []
+					micarta.imgs = []
+					micarta.data = []
+
+				}
+
+				let rn = Math.floor(Math.random() * bufferDeckImgs.length)
+				micarta.imgs.push(bufferDeckImgs[rn])
+				micarta.data.push(bufferDeckData[rn])
+
+				rn = Math.floor(Math.random() * bufferDeckImgs.length)
+				cartaopuesta.imgs.push(bufferDeckImgs[rn])
+				cartaopuesta.data.push(bufferDeckData[rn])
 			}
+			verifyWon = false
 		}
+		if (gameStatus === `playing`) {
+			for (let idx = 0; idx < micarta.imgs.length; idx++) {
+				if (micarta.checkPressed(p, idx)) {
+					console.log(`pressed ${idx}`)
+					draw_allowed = true;
+					imgDragged = idx
+					t1 = p.map(p.mouseX - (micarta.locationsX[idx] - micarta.imgs[idx].width / 2), 0, micarta.imgs[idx].width, -micarta.imgs[idx].width / 2, micarta.imgs[idx].width / 2)
+					t2 = p.map(p.mouseY - (micarta.locationsY[idx] - micarta.imgs[idx].height / 2), 0, micarta.imgs[idx].height, -micarta.imgs[idx].height / 2, micarta.imgs[idx].height / 2)
+					d1 = 0;
+				}
+			}
+	}
 	}
 
 	p.mouseReleased = () => {
