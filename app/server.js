@@ -120,6 +120,7 @@ app.get('/privacy', (req, res) => {
 	let token = jsonwebtoken.sign(sPayload, default_SERVER_KEY)
 	// TODO send token by email when is registering
 	res.send(token)
+
 }).get('/auth/:authTokenStr/:hashedPassword', (req, res) => {
 	let decoded
 	try {
@@ -137,7 +138,7 @@ app.get('/privacy', (req, res) => {
 		let retrievedHP = `${decoded.credentials.hashedpassword}`.substring(33) // retrieved from JWT token
 		let userHP = req.params.hashedPassword
 		if (userHP === retrievedHP) {
-			res.send(decoded.user.id)
+			res.send(decoded.user.id.substring(33))
 		} else {
 			res.send({
 				"error": "unauthorized access or error hashed password request"

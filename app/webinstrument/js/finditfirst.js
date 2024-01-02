@@ -126,7 +126,7 @@ let sketch = (p) => {
 		console.log(`URL is: ${_URL}`);
 	
 		const urlParams = new URLSearchParams(_URL);
-		console.log(urlParams.get('channel'))
+		console.log('channel urlParams is: '+urlParams.get('channel'))
     	channel = urlParams.get('channel')?urlParams.get('channel'):`channel000`
 		console.log(`channel is: ${channel}`)
 
@@ -154,7 +154,7 @@ let sketch = (p) => {
 			}
 		)
 		
-		difficulty = 16
+		difficulty = 8
 		encodeSendJWTRequestBuffer(difficulty)
 
 		scores[0] = 0

@@ -176,6 +176,7 @@ let loadAfterOnload = async () => {
                     }
             }
             hashedpassword = oPayload.credentials.hashedpassword
+            console.log('DEBUG::::::This is the user ID generated in situ: ' + oPayload.user.id)
             window.localStorage.setItem('hashedpassword', hashedpassword)
             let sHeader = JSON.stringify(oHeader)
             let sPayload = JSON.stringify(oPayload)
@@ -186,14 +187,14 @@ let loadAfterOnload = async () => {
                 if (err != null) {
                     console.error(err)
                 } else {
-                    window.localStorage.setItem('userJWT', data)
+                    window.localStorage.setItem('userJWT', data) 
                     writeCookie(cookieNameApp, data, 1)
                     let userJWT = window.localStorage.getItem('userJWT')
                     getJSON(`/auth/${userJWT}/${hashedpassword}`,  (err, data) => {
                         if (err != null) {
                             console.error(err)
                         } else {
-                            console.log(data)
+                            console.log('DEBIG:::::: This is the data return by auth path: ' + data)
                             new p5(sketch)
                         }
                     })
