@@ -16,11 +16,11 @@ describe("Find It First Smart Contract Test", () => {
         await hardhatToken.connect(owner).mint(player1.address, 100);
         await hardhatToken.connect(owner).mint(player2.address, 100);
 
-        await hardhatToken.connect(player1).approve(fif.target, 10)
-        await hardhatToken.connect(player2).approve(fif.target, 10)
+        await hardhatToken.connect(player1).approve(fif.target, 20)
+        await hardhatToken.connect(player2).approve(fif.target, 20)
 
-        await fif.connect(player1).transferirTokens(10)
-        await fif.connect(player2).transferirTokens(10)
+        await fif.connect(player1).transferirTokens(15)
+        await fif.connect(player2).transferirTokens(16)
     });
 
     // it("Deployment should assign the total supply of tokens to the owner", async function () {

@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract FIF is ERC721URIStorage, EIP712, AccessControl {
+contract FIF is EIP712, AccessControl {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     string private constant SIGNING_DOMAIN = "FIND-IT-FIRST";
     string private constant SIGNATURE_VERSION = "1";
@@ -27,7 +27,7 @@ contract FIF is ERC721URIStorage, EIP712, AccessControl {
 
     constructor(
         address _tokenAddress
-    ) ERC721("LazyNFT", "LAZ") EIP712(SIGNING_DOMAIN, SIGNATURE_VERSION) {
+    ) EIP712(SIGNING_DOMAIN, SIGNATURE_VERSION) {
         _grantRole(MINTER_ROLE, msg.sender);
         token = IERC20(_tokenAddress);
     }
@@ -79,33 +79,33 @@ contract FIF is ERC721URIStorage, EIP712, AccessControl {
         );
 
         console.log('SC::::::FIF.sol before #Balances and Bets not matching#, voucher.winnerAddress', voucher.winnerAddress);
-        console.log('SC::::::FIF.sol before #Balances and Bets not matching#, toAddress(voucher.winnerAddress)', toAddress(voucher.winnerAddress));
-        console.log('SC::::::FIF.sol before #Balances and Bets not matching#, balances[toAddress(voucher.winnerAddress)]', balances[toAddress(voucher.winnerAddress)]);
+        console.log('SC::::::FIF.sol before #Balances and Bets not matching#, toAddress(voucher.winnerAddress)', stringToAddress(voucher.winnerAddress));
+        console.log('SC::::::FIF.sol before #Balances and Bets not matching#, balances[toAddress(voucher.winnerAddress)]', balances[stringToAddress(voucher.winnerAddress)]);
         console.log('SC::::::FIF.sol before #Balances and Bets not matching#, voucher.winnerBet', voucher.winnerBet);
-        console.log('SC::::::FIF.sol before #Balances and Bets not matching#, balances[toAddress(voucher.loserAddress)]', balances[toAddress(voucher.loserAddress)]);
+        console.log('SC::::::FIF.sol before #Balances and Bets not matching#, balances[toAddress(voucher.loserAddress)]', balances[stringToAddress(voucher.loserAddress)]);
         console.log('SC::::::FIF.sol before #Balances and Bets not matching#, voucher.loserBet', voucher.loserBet);
 
         require(
-            balances[toAddress(voucher.winnerAddress)] >= voucher.winnerBet && balances[toAddress(voucher.loserAddress)] >= voucher.loserBet, 
+            balances[stringToAddress(voucher.winnerAddress)] >= voucher.winnerBet && balances[stringToAddress(voucher.loserAddress)] >= voucher.loserBet, 
             "Balances and Bets not matching" 
         );
 
         vouchers[voucher.voucherId] = true;
 
-        balances[toAddress(voucher.winnerAddress)] -= voucher.winnerBet;
-        balances[toAddress(voucher.loserAddress)] -= voucher.loserBet;
-        if(balances[toAddress(voucher.loserAddress)] == 0) {
-            canPlay[toAddress(voucher.loserAddress)] = false;
+        balances[stringToAddress(voucher.winnerAddress)] -= voucher.winnerBet;
+        balances[stringToAddress(voucher.loserAddress)] -= voucher.loserBet;
+        if(balances[stringToAddress(voucher.loserAddress)] == 0) {
+            canPlay[stringToAddress(voucher.loserAddress)] = false;
         }
-        if(balances[toAddress(voucher.winnerAddress)] == 0){
-        canPlay[toAddress(voucher.winnerAddress)] = false;
+        if(balances[stringToAddress(voucher.winnerAddress)] == 0){
+        canPlay[stringToAddress(voucher.winnerAddress)] = false;
         }
-        token.approve(toAddress(voucher.winnerAddress), voucher.winnerReward);
-        token.transfer(address(toAddress(voucher.winnerAddress)), voucher.winnerReward);
-        emit RewardRedeemed(toAddress(voucher.winnerAddress), voucher.winnerReward);
+        token.approve(stringToAddress(voucher.winnerAddress), voucher.winnerReward);
+        token.transfer(address(stringToAddress(voucher.winnerAddress)), voucher.winnerReward);
+        emit RewardRedeemed(stringToAddress(voucher.winnerAddress), voucher.winnerReward);
     }
 
-     function toAddress(string calldata s) public  returns (address) {
+     function stringToAddress(string calldata s) public pure  returns (address) {
         bytes memory _bytes = hexStringToAddress(s);
         require(_bytes.length >= 1 + 20, "toAddress_outOfBounds");
         address tempAddress;
@@ -116,7 +116,7 @@ contract FIF is ERC721URIStorage, EIP712, AccessControl {
 
         return tempAddress;
     }
-     function hexStringToAddress(string calldata s) public  returns (bytes memory) {
+     function hexStringToAddress(string calldata s) public pure  returns (bytes memory) {
         bytes memory ss = bytes(s);
         require(ss.length%2 == 0); // length must be even
         bytes memory r = new bytes(ss.length/2);
@@ -129,7 +129,7 @@ contract FIF is ERC721URIStorage, EIP712, AccessControl {
 
     }
 
-     function fromHexChar(uint8 c) public returns (uint8) {
+     function fromHexChar(uint8 c) public pure returns (uint8) {
         if (bytes1(c) >= bytes1('0') && bytes1(c) <= bytes1('9')) {
             return c - uint8(bytes1('0'));
         }
@@ -193,11 +193,11 @@ contract FIF is ERC721URIStorage, EIP712, AccessControl {
         public
         view
         virtual
-        override(AccessControl, ERC721URIStorage)
+        override(AccessControl)
         returns (bool)
     {
 
-    return ERC721.supportsInterface(interfaceId) || AccessControl.supportsInterface(interfaceId);
+    return AccessControl.supportsInterface(interfaceId);
 
     }
 }
