@@ -62,9 +62,7 @@ class VoucherMaker {
         {name: "loserAddress", type: "string"},  
       ]
     }
-    console.log('DEBUG:::::voucherMaker.js: ' + this.signer.address)
     const signature = await this.signer.signTypedData(domain, types, voucher)
-    console.log('DEBUG:::::voucherMaker.js: signature is: ' + signature)
     return {
       ...voucher,
       signature,

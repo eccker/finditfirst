@@ -54,14 +54,14 @@ contract FIF is EIP712, AccessControl {
         emit TransferTokens(msg.sender, amount);
     }
 
-    /// @notice Redeems an WinnerVoucher for an actual NFT, creating it in the process.
-    /// @param voucher A signed WinnerVoucher that describes the NFT to be redeemed.
+    /// @notice Redeems an WinnerVoucher for an actual reward.
+    /// @param voucher A signed WinnerVoucher that describes the Reward to be redeemed.
     function redeem( WinnerVoucher calldata voucher
     ) public {
         // make sure signature is valid and get the address of the signer
         address signer = _verify(voucher);
 
-        console.log('SC::::: Signer is:', signer);
+        // console.log('SC::::: Signer is:', signer);
         // make sure that the signer is authorized to mint NFTs
         require(
             hasRole(MINTER_ROLE, signer),
@@ -78,12 +78,12 @@ contract FIF is EIP712, AccessControl {
             "Voucher reward and bets do not match"
         );
 
-        console.log('SC::::::FIF.sol before #Balances and Bets not matching#, voucher.winnerAddress', voucher.winnerAddress);
-        console.log('SC::::::FIF.sol before #Balances and Bets not matching#, toAddress(voucher.winnerAddress)', stringToAddress(voucher.winnerAddress));
-        console.log('SC::::::FIF.sol before #Balances and Bets not matching#, balances[toAddress(voucher.winnerAddress)]', balances[stringToAddress(voucher.winnerAddress)]);
-        console.log('SC::::::FIF.sol before #Balances and Bets not matching#, voucher.winnerBet', voucher.winnerBet);
-        console.log('SC::::::FIF.sol before #Balances and Bets not matching#, balances[toAddress(voucher.loserAddress)]', balances[stringToAddress(voucher.loserAddress)]);
-        console.log('SC::::::FIF.sol before #Balances and Bets not matching#, voucher.loserBet', voucher.loserBet);
+        // console.log('SC::::::FIF.sol before #Balances and Bets not matching#, voucher.winnerAddress', voucher.winnerAddress);
+        // console.log('SC::::::FIF.sol before #Balances and Bets not matching#, toAddress(voucher.winnerAddress)', stringToAddress(voucher.winnerAddress));
+        // console.log('SC::::::FIF.sol before #Balances and Bets not matching#, balances[toAddress(voucher.winnerAddress)]', balances[stringToAddress(voucher.winnerAddress)]);
+        // console.log('SC::::::FIF.sol before #Balances and Bets not matching#, voucher.winnerBet', voucher.winnerBet);
+        // console.log('SC::::::FIF.sol before #Balances and Bets not matching#, balances[toAddress(voucher.loserAddress)]', balances[stringToAddress(voucher.loserAddress)]);
+        // console.log('SC::::::FIF.sol before #Balances and Bets not matching#, voucher.loserBet', voucher.loserBet);
 
         require(
             balances[stringToAddress(voucher.winnerAddress)] >= voucher.winnerBet && balances[stringToAddress(voucher.loserAddress)] >= voucher.loserBet, 
@@ -173,7 +173,7 @@ contract FIF is EIP712, AccessControl {
         assembly {
             id := chainid()
         }
-        console.log("SC::::::getChainID is:",id);
+        // console.log("SC::::::getChainID is:",id);
         return id;
     }
 
