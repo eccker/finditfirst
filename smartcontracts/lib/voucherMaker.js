@@ -40,16 +40,7 @@ class VoucherMaker {
    * 
    * @returns {WinnerVoucher}
    */
-  /*
-        uint256 voucherId;
-        uint256 winnerReward;
-        uint256 winnerBet;
-        uint256 loserBet;
-        string winnerAddress;
-        string loserAddress;
-        bytes signature;
-  */
-  async createVoucher(voucherId, winnerReward, winnerBet, loserBet, winnerAddress, loserAddress) {
+async createVoucher(voucherId, winnerReward, winnerBet, loserBet, winnerAddress, loserAddress) {
     const voucher = { voucherId, winnerReward, winnerBet, loserBet, winnerAddress, loserAddress }
     const domain = await this._signingDomain()
     const types = {
@@ -78,8 +69,6 @@ class VoucherMaker {
       return this._domain
     }
     const chainId = await this.contract.getChainID()
-    // const chainId = 0
-// console.log("this is: this.contract: " + this.contract)
     this._domain = {
       name: SIGNING_DOMAIN_NAME,
       version: SIGNING_DOMAIN_VERSION,
