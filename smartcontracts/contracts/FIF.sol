@@ -10,9 +10,9 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract FIF is EIP712, AccessControl {
+contract FIF is ERC721URIStorage, EIP712, AccessControl {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-    string private constant SIGNING_DOMAIN = "FIND_IT_FIRST";
+    string private constant SIGNING_DOMAIN = "FIND-IT-FIRST";
     string private constant SIGNATURE_VERSION = "1";
 
     IERC20 public token; // Token ERC-20 utilizado en el juego
@@ -23,23 +23,23 @@ contract FIF is EIP712, AccessControl {
 
     // mapping(address => uint256) pendingWithdrawals;
     event TransferTokens(address indexed player, uint256 amount);
+    event RewardRedeemed(address indexed player, uint256 amount);
 
     constructor(
-        address payable minter,
         address _tokenAddress
-    ) EIP712(SIGNING_DOMAIN, SIGNATURE_VERSION) {
-        _grantRole(MINTER_ROLE, minter);
+    ) ERC721("LazyNFT", "LAZ") EIP712(SIGNING_DOMAIN, SIGNATURE_VERSION) {
+        _grantRole(MINTER_ROLE, msg.sender);
         token = IERC20(_tokenAddress);
     }
 
     /// @notice Represents winner's reward, which has not yet been recorded into the blockchain. A signed voucher can be redeemed for tokens using the redeem function.
     struct WinnerVoucher {
-        uint256 voucherID;
-        address winnerAddress;
-        address loserAddress;
+        uint256 voucherId;
         uint256 winnerReward;
         uint256 winnerBet;
         uint256 loserBet;
+        string winnerAddress;
+        string loserAddress;
         bytes signature;
     }
 
@@ -54,13 +54,14 @@ contract FIF is EIP712, AccessControl {
         emit TransferTokens(msg.sender, amount);
     }
 
-    /// @notice Redeems an NFTVoucher for an actual NFT, creating it in the process.
-    /// @param voucher A signed NFTVoucher that describes the NFT to be redeemed.
+    /// @notice Redeems an WinnerVoucher for an actual NFT, creating it in the process.
+    /// @param voucher A signed WinnerVoucher that describes the NFT to be redeemed.
     function redeem( WinnerVoucher calldata voucher
     ) public {
         // make sure signature is valid and get the address of the signer
         address signer = _verify(voucher);
 
+        console.log('SC::::: Signer is:', signer);
         // make sure that the signer is authorized to mint NFTs
         require(
             hasRole(MINTER_ROLE, signer),
@@ -68,7 +69,7 @@ contract FIF is EIP712, AccessControl {
         );
 
         require(
-            vouchers[voucher.voucherID] != true,
+            vouchers[voucher.voucherId] != true,
             "Voucher spent"
         );
 
@@ -77,27 +78,72 @@ contract FIF is EIP712, AccessControl {
             "Voucher reward and bets do not match"
         );
 
+        console.log('SC::::::FIF.sol before #Balances and Bets not matching#, voucher.winnerAddress', voucher.winnerAddress);
+        console.log('SC::::::FIF.sol before #Balances and Bets not matching#, toAddress(voucher.winnerAddress)', toAddress(voucher.winnerAddress));
+        console.log('SC::::::FIF.sol before #Balances and Bets not matching#, balances[toAddress(voucher.winnerAddress)]', balances[toAddress(voucher.winnerAddress)]);
+        console.log('SC::::::FIF.sol before #Balances and Bets not matching#, voucher.winnerBet', voucher.winnerBet);
+        console.log('SC::::::FIF.sol before #Balances and Bets not matching#, balances[toAddress(voucher.loserAddress)]', balances[toAddress(voucher.loserAddress)]);
+        console.log('SC::::::FIF.sol before #Balances and Bets not matching#, voucher.loserBet', voucher.loserBet);
+
         require(
-            balances[voucher.winnerAddress] >= voucher.winnerBet && balances[voucher.loserAddress] >= voucher.winnerBet, 
+            balances[toAddress(voucher.winnerAddress)] >= voucher.winnerBet && balances[toAddress(voucher.loserAddress)] >= voucher.loserBet, 
             "Balances and Bets not matching" 
         );
 
-        vouchers[voucher.voucherID] = true;
+        vouchers[voucher.voucherId] = true;
 
-        balances[voucher.winnerAddress] -= voucher.winnerBet;
-        balances[voucher.loserAddress] -= voucher.loserBet;
-        if(balances[voucher.loserAddress] == 0) {
-            canPlay[voucher.loserAddress] = false;
+        balances[toAddress(voucher.winnerAddress)] -= voucher.winnerBet;
+        balances[toAddress(voucher.loserAddress)] -= voucher.loserBet;
+        if(balances[toAddress(voucher.loserAddress)] == 0) {
+            canPlay[toAddress(voucher.loserAddress)] = false;
         }
-        if(balances[voucher.winnerAddress] == 0){
-        canPlay[voucher.winnerAddress] = false;
+        if(balances[toAddress(voucher.winnerAddress)] == 0){
+        canPlay[toAddress(voucher.winnerAddress)] = false;
         }
-
-        token.transferFrom(address(this), voucher.winnerAddress, voucher.winnerReward);
+        token.approve(toAddress(voucher.winnerAddress), voucher.winnerReward);
+        token.transfer(address(toAddress(voucher.winnerAddress)), voucher.winnerReward);
+        emit RewardRedeemed(toAddress(voucher.winnerAddress), voucher.winnerReward);
     }
 
-    /// @notice Returns a hash of the given NFTVoucher, prepared using EIP712 typed data hashing rules.
-    /// @param voucher An NFTVoucher to hash.
+     function toAddress(string calldata s) public  returns (address) {
+        bytes memory _bytes = hexStringToAddress(s);
+        require(_bytes.length >= 1 + 20, "toAddress_outOfBounds");
+        address tempAddress;
+
+        assembly {
+            tempAddress := div(mload(add(add(_bytes, 0x20), 1)), 0x1000000000000000000000000)
+        }
+
+        return tempAddress;
+    }
+     function hexStringToAddress(string calldata s) public  returns (bytes memory) {
+        bytes memory ss = bytes(s);
+        require(ss.length%2 == 0); // length must be even
+        bytes memory r = new bytes(ss.length/2);
+        for (uint i=0; i<ss.length/2; ++i) {
+            r[i] = bytes1(fromHexChar(uint8(ss[2*i])) * 16 +
+                        fromHexChar(uint8(ss[2*i+1])));
+        }
+
+        return r;
+
+    }
+
+     function fromHexChar(uint8 c) public returns (uint8) {
+        if (bytes1(c) >= bytes1('0') && bytes1(c) <= bytes1('9')) {
+            return c - uint8(bytes1('0'));
+        }
+        if (bytes1(c) >= bytes1('a') && bytes1(c) <= bytes1('f')) {
+            return 10 + c - uint8(bytes1('a'));
+        }
+        if (bytes1(c) >= bytes1('A') && bytes1(c) <= bytes1('F')) {
+            return 10 + c - uint8(bytes1('A'));
+        }
+        return 0;
+    }
+
+    /// @notice Returns a hash of the given WinnerVoucher, prepared using EIP712 typed data hashing rules.
+    /// @param voucher An WinnerVoucher to hash.
     function _hash(
         WinnerVoucher calldata voucher
     ) internal view returns (bytes32) {
@@ -106,14 +152,14 @@ contract FIF is EIP712, AccessControl {
                 keccak256(
                     abi.encode(
                         keccak256(
-                            "WinnerVoucher(uint256 voucherID, address winnerAddress, address loserAddress, uint256 winnerReward, uint256 winnerBet, uint256 loserBet;)"
+                            "WinnerVoucher(uint256 voucherId,uint256 winnerReward,uint256 winnerBet,uint256 loserBet,string winnerAddress,string loserAddress)"
                         ),
-                        voucher.voucherID,
-                        voucher.winnerAddress,
-                        voucher.loserAddress,
+                        voucher.voucherId,
                         voucher.winnerReward,
                         voucher.winnerBet,
-                        voucher.loserBet
+                        voucher.loserBet,
+                        keccak256(bytes(voucher.winnerAddress)),
+                        keccak256(bytes(voucher.loserAddress))
                     )
                 )
             );
@@ -127,12 +173,13 @@ contract FIF is EIP712, AccessControl {
         assembly {
             id := chainid()
         }
+        console.log("SC::::::getChainID is:",id);
         return id;
     }
 
-    /// @notice Verifies the signature for a given NFTVoucher, returning the address of the signer.
+    /// @notice Verifies the signature for a given WinnerVoucher, returning the address of the signer.
     /// @dev Will revert if the signature is invalid. Does not verify that the signer is authorized to mint NFTs.
-    /// @param voucher An NFTVoucher describing an unminted NFT.
+    /// @param voucher An WinnerVoucher describing an unminted NFT.
     function _verify(
         WinnerVoucher calldata voucher
     ) internal view returns (address) {
@@ -146,10 +193,11 @@ contract FIF is EIP712, AccessControl {
         public
         view
         virtual
-        override(AccessControl)
+        override(AccessControl, ERC721URIStorage)
         returns (bool)
     {
-        return
-            AccessControl.supportsInterface(interfaceId);
+
+    return ERC721.supportsInterface(interfaceId) || AccessControl.supportsInterface(interfaceId);
+
     }
 }
