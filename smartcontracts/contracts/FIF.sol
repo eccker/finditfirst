@@ -21,6 +21,10 @@ contract FIF is EIP712, AccessControl {
     mapping(uint256 => bool) public vouchers; // Indica si un jugador tiene un voucher
     mapping(address => bool) public canPlay; // Indica si un jugador puede jugar porque ya pagó
 
+    address public authorAddress = 0x090Ec11314d4BD31B536F52472d2E6A1D4771220;
+    address public treasuryAddress = 0x88c7CE98b4924c7eA58F160D3A128e0592ECB053;
+    address public DAOAddress = 0x2696b670D795e3B524880402C67b1ACCe6C1860f;
+
     // mapping(address => uint256) pendingWithdrawals;
     event TransferTokens(address indexed player, uint256 amount);
     event RewardRedeemed(address indexed player, uint256 amount);
@@ -92,9 +96,25 @@ contract FIF is EIP712, AccessControl {
         if(balances[stringToAddress(voucher.winnerAddress)] == 0){
         canPlay[stringToAddress(voucher.winnerAddress)] = false;
         }
-        token.approve(stringToAddress(voucher.winnerAddress), voucher.winnerReward);
-        token.transfer(address(stringToAddress(voucher.winnerAddress)), voucher.winnerReward);
-        emit RewardRedeemed(stringToAddress(voucher.winnerAddress), voucher.winnerReward);
+
+        // TODO partition the Reward to cover FIF fee
+        uint256 _amountOfFIFCoinForAuthor       = (( 2128623629 * 10**9) * voucher.winnerReward) / 10**20; //  2.128623629 % BMMM3SC Author
+        uint256 _amountOfFIFCoinForTreasury     = (( 2461179748 * 10**9) * voucher.winnerReward) / 10**20; //  2.461179748 % BMMM3SC Treasury
+        uint256 _amountOfFIFCoinForWinner       = ((91803398874 * 10**9) * voucher.winnerReward) / 10**20; // 91.803398874 % BMMM3SC Sender
+        uint256 _amountOfFIFCoinForDAO          = (( 3606797749 * 10**9) * voucher.winnerReward) / 10**20; //  3.606797749 % BMMM3SC DAO
+
+        token.approve(authorAddress, _amountOfFIFCoinForAuthor);
+        token.transfer(authorAddress, _amountOfFIFCoinForAuthor);
+
+        token.approve(treasuryAddress, _amountOfFIFCoinForTreasury);
+        token.transfer(treasuryAddress, _amountOfFIFCoinForTreasury);
+
+        token.approve(DAOAddress, _amountOfFIFCoinForDAO);
+        token.transfer(DAOAddress, _amountOfFIFCoinForDAO);
+
+        token.approve(stringToAddress(voucher.winnerAddress), _amountOfFIFCoinForWinner);
+        token.transfer(address(stringToAddress(voucher.winnerAddress)), _amountOfFIFCoinForWinner);
+        emit RewardRedeemed(stringToAddress(voucher.winnerAddress), _amountOfFIFCoinForWinner);
     }
 
      function stringToAddress(string calldata s) public pure  returns (address) {
