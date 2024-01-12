@@ -5,7 +5,10 @@ contract MyToken is ERC20 {
     uint256 public constant tokenPrice = 1 ether; 
 // Price for minting tokens 
 address public owner; 
-constructor() ERC20("MyToken", "MTK") { 
+constructor(
+    string memory _tokenName,
+    string memory _tokenSymbol
+) ERC20(_tokenName, _tokenSymbol) { 
     owner = msg.sender; 
 } 
 
