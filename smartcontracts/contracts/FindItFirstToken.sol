@@ -35,15 +35,14 @@ contract FindItFirstToken is
         address pauser,
         address minter,
         address _paymentTokenAddress,
-        uint256 _price
+        uint256 _minAmountToMint
     ) ERC20("Find It First", "FIF") ERC20Permit("Find It First") {
         _grantRole(DEFAULT_ADMIN_ROLE, defaultAdmin);
         _grantRole(PAUSER_ROLE, pauser);
-        // _mint(msg.sender, 1 * 10 ** decimals());
         _grantRole(MINTER_ROLE, minter);
         paymentTokenAddress = _paymentTokenAddress;
         paymentToken = IERC20(_paymentTokenAddress);
-        minAmountToMint = _price;
+        minAmountToMint = _minAmountToMint;
     }
 
     function pause() public onlyRole(PAUSER_ROLE) {
