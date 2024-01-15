@@ -29,7 +29,7 @@ let sketch = (p) => {
 
 	let gameStatus = `ready`
 	let verifyWon = false
-	let myDeckBtn
+	// let myDeckBtn
 	let opDeckBtn
 
 	
@@ -158,7 +158,7 @@ let sketch = (p) => {
 		encodeSendJWTRequestBuffer(difficulty)
 
 		scores[0] = 0
-		cartaopuesta = new card(0, 0)
+		cartaopuesta = new card(0, p.height / 16)
 		cartaopuesta.initCards(p)
 
 		micarta = new card(0, p.height / 2)
@@ -167,23 +167,24 @@ let sketch = (p) => {
 		someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * ranTime) + minTime)
 		draw_allowed = true;
 		p.background(10, 10, 10, 251)
-		myDeckBtn = p.createButton('Get Deck [m]');
-		myDeckBtn.position( 14 * p.width / 16, 8 * p.height / 16);
-		myDeckBtn.style('position','fixed')
-		myDeckBtn.hide()
-		myDeckBtn.mousePressed( () => {
-			if (gameStatus === `playing`) {
-				for (let index = 0; index < 6; index++) {
-					if (micarta.imgs.length > 5) {
-						micarta.imgs = []
-						micarta.data = []
-					}
-					let rn = Math.floor(Math.random() * bufferDeckImgs.length)
-					micarta.imgs.push(bufferDeckImgs[rn])
-					micarta.data.push(bufferDeckData[rn])
-				}
-			}
-		})
+		// myDeckBtn = p.createButton('Get Deck [m]');
+		// myDeckBtn.position( 14 * p.width / 16, 8 * p.height / 16);
+		// myDeckBtn.style('position','fixed')
+		// myDeckBtn.hide()
+		// myDeckBtn.mousePressed( () => {
+		// 	if (gameStatus === `playing`) {
+		// 		for (let index = 0; index < 6; index++) {
+		// 			if (micarta.imgs.length > 5) {
+		// 				micarta.imgs = []
+		// 				micarta.data = []
+		// 			}
+		// 			let rn = Math.floor(Math.random() * bufferDeckImgs.length)
+		// 			micarta.imgs.push(bufferDeckImgs[rn])
+		// 			micarta.data.push(bufferDeckData[rn])
+                    
+		// 		}
+		// 	}
+		// })
 
 		opDeckBtn = p.createButton('Get Deck [b]');
 		opDeckBtn.position( 14 * p.width / 16, 7 * p.height / 16);
@@ -198,6 +199,14 @@ let sketch = (p) => {
 					let rn = Math.floor(Math.random() * bufferDeckImgs.length)
 					cartaopuesta.imgs.push(bufferDeckImgs[rn])
 					cartaopuesta.data.push(bufferDeckData[rn])
+                    if (micarta.imgs.length > 5) {
+						micarta.imgs = []
+						micarta.data = []
+
+					}
+					rn = Math.floor(Math.random() * bufferDeckImgs.length)
+					micarta.imgs.push(bufferDeckImgs[rn])
+					micarta.data.push(bufferDeckData[rn])
 				}
 			}
 		})
@@ -206,8 +215,8 @@ let sketch = (p) => {
 
 	p.windowResized = () => {
 		p.resizeCanvas(p.windowWidth, p.windowHeight)
-		myDeckBtn.position( 14 * p.width / 16, 8 * p.height / 16);
-		myDeckBtn.style('position','fixed')
+		// myDeckBtn.position( 14 * p.width / 16, 8 * p.height / 16);
+		// myDeckBtn.style('position','fixed')
 
 		opDeckBtn.position( 14 * p.width / 16, 7 * p.height / 16);
 		opDeckBtn.style('position','fixed')
@@ -226,7 +235,7 @@ let sketch = (p) => {
 			p.text(`Ready? Press [Space Bar] to Start`, 3 * p.width / 8, 7 * p.height / 16)
 			p.text(`How to Play: `, 3 * p.width / 8, 8 * p.height / 16)
 			p.text(`Drag and Drop one image that matches one of the upper 6  `, 3 * p.width / 8, 20 + 8 * p.height / 16)
-			myDeckBtn.hide()
+			// myDeckBtn.hide()
 			opDeckBtn.hide()
 		}
 
@@ -239,7 +248,7 @@ let sketch = (p) => {
 			p.text(`Difficulty: ${scores.length-1}`, 7 * p.width / 8, 2 * p.height / 8)
 			p.text(`Lifes: ${lifes}`, 7 * p.width / 8, 3 * p.height / 8)
 
-			myDeckBtn.hide()
+			// myDeckBtn.hide()
 			opDeckBtn.hide()
 		}
 
@@ -247,15 +256,15 @@ let sketch = (p) => {
 			p.fill(200, 20, 15);
 			p.text(`Game Over. Press [r] to restart the Game`, 3 * p.width / 8, p.height / 2)
 
-			p.text(`Last time: ${scores[scores.length-1]}`, 7 * p.width / 8, p.height / 8)
-			p.text(`Difficulty: ${scores.length-1}`, 7 * p.width / 8, 2 * p.height / 8)
-			p.text(`Lifes: ${lifes}`, 7 * p.width / 8, 3 * p.height / 8)
-			myDeckBtn.hide()
+			p.text(`Last time: ${scores[scores.length-1]}`, 6 * p.width / 8, p.height / 8)
+			p.text(`Difficulty: ${scores.length-1}`, 6 * p.width / 8, 2 * p.height / 8)
+			p.text(`Lifes: ${lifes}`, 6 * p.width / 8, 3 * p.height / 8)
+			// myDeckBtn.hide()
 			opDeckBtn.hide()
 		}
 		if (gameStatus === `playing`) {
 
-			myDeckBtn.show()
+			// myDeckBtn.show()
 			opDeckBtn.show()
 
 			// playing
@@ -268,9 +277,9 @@ let sketch = (p) => {
 			cartaopuesta.show(p)
 			micarta.show(p)
 			p.fill(0, 200, 15);
-			p.text(`Last time: ${scores[scores.length-1]}`, 7 * p.width / 8, p.height / 8)
-			p.text(`Difficulty: ${scores.length-1}`, 7 * p.width / 8, 2 * p.height / 8)
-			p.text(`Lifes: ${lifes}`, 7 * p.width / 8, 3 * p.height / 8)
+			p.text(`Last time: ${scores[scores.length-1]}`, 6.5 * p.width / 8, p.height / 8)
+			p.text(`Difficulty: ${scores.length-1}`, 6.5 * p.width / 8, 2 * p.height / 8)
+			p.text(`Lifes: ${lifes}`, 6.5 * p.width / 8, 3 * p.height / 8)
 
 			now = p.millis()
 			elapsedTime = now - lastGeneratedTime
@@ -279,6 +288,10 @@ let sketch = (p) => {
 				p.fill(tempcol)
 				p.noStroke()
 				p.rect(0, 0, p.width / 8, altura)
+                p.fill(200,200,200)
+                p.textSize(24);
+	        	p.text(`Time Left: ${((someHeartBeatPeriod - elapsedTime)/1000).toFixed(2)}`, p.width / 8, p.height / 32)
+
 			}
 			if (elapsedTime > someHeartBeatPeriod) {
 				lastGeneratedTime = now
@@ -353,22 +366,31 @@ let sketch = (p) => {
 					let rn = Math.floor(Math.random() * bufferDeckImgs.length)
 					cartaopuesta.imgs.push(bufferDeckImgs[rn])
 					cartaopuesta.data.push(bufferDeckData[rn])
-				}
-			}
-		}
-		if (p.key === 'm') {
-			if (gameStatus === `playing`) {
-				for (let index = 0; index < 6; index++) {
-					if (micarta.imgs.length > 5) {
+
+                    if (micarta.imgs.length > 5) {
 						micarta.imgs = []
 						micarta.data = []
 
 					}
-					let rn = Math.floor(Math.random() * bufferDeckImgs.length)
-					micarta.imgs.push(bufferDeckImgs[rn])
-					micarta.data.push(bufferDeckData[rn])
+					let rn2 = Math.floor(Math.random() * bufferDeckImgs.length)
+					micarta.imgs.push(bufferDeckImgs[rn2])
+					micarta.data.push(bufferDeckData[rn2])
 				}
 			}
+		}
+		if (p.key === 'm') {
+			// if (gameStatus === `playing`) {
+			// 	for (let index = 0; index < 6; index++) {
+			// 		if (micarta.imgs.length > 5) {
+			// 			micarta.imgs = []
+			// 			micarta.data = []
+
+			// 		}
+			// 		let rn = Math.floor(Math.random() * bufferDeckImgs.length)
+			// 		micarta.imgs.push(bufferDeckImgs[rn])
+			// 		micarta.data.push(bufferDeckData[rn])
+			// 	}
+			// }
 		}
 		if (p.key === 'B') {
 
