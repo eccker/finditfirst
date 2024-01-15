@@ -28,13 +28,12 @@ every reward redeem/reclaim transaction has a 8.2% fee to withdraw
 Design the UX and UI for "Find it First":
 
 ### 1. **Homepage:**
-   - Solo can be played without login and without pay
-   - Provide a login page for player to login and/or connect his wallet
-   - High Score, 1 vs 1, Multiplayer, Tournament, and Tour modes only can be played if login and wallet connected
-   - Player have to pay with FIFs the entrancy fee (fixed for High Score, Multiplayer/variable for Tournament, and Tour modes) 
+   - Provide a login modal for player to login 
+   - Provide a connect wallet modal for player to connect his wallet
+   - Provide a quick access button to play in Solo mode
    - Provide clear navigation options for Solo, High Score, 1 vs 1, Multiplayer, Tournament, and Tour modes.
-   - Display the player's profile
-   - Include a settings option for sound, graphics, and other preferences.
+   - Provide a player's profile modal
+   - Include a settings modal for sound, graphics, and other preferences.
    - Feature an attractive and dynamic background related to the game theme.
 
 ### 2. **player's profile**
@@ -48,8 +47,10 @@ Design the UX and UI for "Find it First":
    - Players must buy/mint FIF ERC20 tokens
    - Players must buy FIF tickets with FIF ERC20 tokens (1 ticket equals 1 token)
    - A ticket can be hold, spent in-game but no withdraw or transfer.
-   - Winner player receive (Tickets Won)*91%
+   - Winner player receive (Tickets Won)*91% in FIF ERC20 Tokens
    - There are Solo, High Score, 1 vs 1, Multiplayer, Tournament, and Tour modes
+   - High Score, 1 vs 1, Multiplayer, Tournament, and Tour modes only can be played if login and wallet connected
+   - Solo can be played without login and without pay
    - Solo game do not require FIF tickets
    - Solo game came with 3 free tickets
    - Solo game can be customized in difficulty and expiring try time (only with login)
