@@ -124,7 +124,8 @@ let sketch = (p) => {
 		draw_allowed = true;
 		const _URL = window.location.search
 		console.log(`URL is: ${_URL}`);
-	
+        p.textSize(24);
+
 		const urlParams = new URLSearchParams(_URL);
 		console.log('channel urlParams is: '+urlParams.get('channel'))
     	channel = urlParams.get('channel')?urlParams.get('channel'):`channel000`
@@ -244,7 +245,7 @@ let sketch = (p) => {
 			micarta.show(p)
 			p.text(`Good Selection. Press [Space Bar] to continue...`, 3 * p.width / 8, 7 * p.height / 16)
 
-			p.text(`Last time: ${scores[scores.length-1]}`, 7 * p.width / 8, p.height / 8)
+			p.text(`Last time: ${((scores[scores.length-1])/1000).toFixed(2)}`, 7 * p.width / 8, p.height / 8)
 			p.text(`Difficulty: ${scores.length-1}`, 7 * p.width / 8, 2 * p.height / 8)
 			p.text(`Lifes: ${lifes}`, 7 * p.width / 8, 3 * p.height / 8)
 
@@ -256,12 +257,23 @@ let sketch = (p) => {
 			p.fill(200, 20, 15);
 			p.text(`Game Over. Press [r] to restart the Game`, 3 * p.width / 8, p.height / 2)
 
-			p.text(`Last time: ${scores[scores.length-1]}`, 6 * p.width / 8, p.height / 8)
+			p.text(`Last time: ${((scores[scores.length-1])/1000).toFixed(2)}`, 6 * p.width / 8, p.height / 8)
 			p.text(`Difficulty: ${scores.length-1}`, 6 * p.width / 8, 2 * p.height / 8)
 			p.text(`Lifes: ${lifes}`, 6 * p.width / 8, 3 * p.height / 8)
 			// myDeckBtn.hide()
 			opDeckBtn.hide()
 		}
+
+        if(gameStatus === `expired`){
+            p.fill(200, 20, 15);
+			p.text(`Time expired, you spent a ticket. Now you have ${lifes} tickets. Press [space] to continue the Game`, p.width / 8, p.height / 2)
+
+			p.text(`Last time: ${((scores[scores.length-1])/1000).toFixed(2)}`, 6 * p.width / 8, p.height / 8)
+			p.text(`Difficulty: ${scores.length-1}`, 6 * p.width / 8, 2 * p.height / 8)
+			p.text(`Lifes: ${lifes}`, 6 * p.width / 8, 3 * p.height / 8)
+			opDeckBtn.hide()
+        }
+
 		if (gameStatus === `playing`) {
 
 			// myDeckBtn.show()
@@ -277,7 +289,7 @@ let sketch = (p) => {
 			cartaopuesta.show(p)
 			micarta.show(p)
 			p.fill(0, 200, 15);
-			p.text(`Last time: ${scores[scores.length-1]}`, 6.5 * p.width / 8, p.height / 8)
+			p.text(`Last time: ${((scores[scores.length-1])/1000).toFixed(2)}`, 6.5 * p.width / 8, p.height / 8)
 			p.text(`Difficulty: ${scores.length-1}`, 6.5 * p.width / 8, 2 * p.height / 8)
 			p.text(`Lifes: ${lifes}`, 6.5 * p.width / 8, 3 * p.height / 8)
 
@@ -317,11 +329,13 @@ let sketch = (p) => {
 					cartaopuesta.data.push(bufferDeckData[rn])
 				}
 				lifes = lifes - 1
+                gameStatus = `expired`
 				if (lifes == 0) {
 					gameStatus = `lose`	
 					difficulty = 16
 					encodeSendJWTRequestBuffer(difficulty)
 				}
+
 
 				p.background(10, 10, 10, 251)
 			}
@@ -404,7 +418,7 @@ let sketch = (p) => {
 
 		}
 		if (p.key === ' ') {
-			if (gameStatus === `ready` || gameStatus === `won`) {
+			if (gameStatus === `ready` || gameStatus === `won` || gameStatus === `expired`) {
     
 				micarta.initCardsLocations(p)
 				gameStatus = `playing`
@@ -436,7 +450,7 @@ let sketch = (p) => {
 		}
 	}
 	p.mousePressed = () => {
-		if (gameStatus === `ready` || gameStatus === `won`) {
+		if (gameStatus === `ready` || gameStatus === `won` || gameStatus === `expired`) {
     
 			micarta.initCardsLocations(p)
 			gameStatus = `playing`
