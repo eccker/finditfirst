@@ -41,7 +41,7 @@ Design the UX and UI for "Find it First":
    - avatar, 
    - tickets, 
    - max level achieved, 
-   - FIF level (based on number of games played, speed, high-score wins, 1vs1 wins, multiplayer wins, Tournament wins and Tour wins). A win is valid only if voucher is redeemed 
+   - FIF level (based on number of games played, speed, high-score wins, 1vs1 wins, multiplayer wins, Tournament wins and Tour wins). 
    - in-game erc20 token balance.
 ### 3. **Game Mechanics:**
    - Players must buy/mint FIF ERC20 tokens
@@ -64,20 +64,27 @@ Design the UX and UI for "Find it First":
    - Difficulty refers to a bank of N images used to generate decks in one try. For example, difficulty=8 means eight images are used to randomly build two decks of twelve images in total so probably several repeated images are shown in decks to player in the same try so is easy to spot a match. A difficulty=100 means a bank of 100 images is used to randomly build the two decks with twelve images in total so probably the player has to swift decks several times to find a match.
    - A game is a series of continuous tries played until lose or win.
    - If all player's tickets are spent, player loses the game in all modes
+
+   - Score per try is: 1000 * difficulty + 100 * (1/time-to-match) - 10 * Number-of-shuffles
    
    - In High Score mode Reward is the accumulation of tickets spent from players
-   - In High Score mode player have to has at least one ticket to play
+   - In High Score mode player have to has at least one ticket (3 lives) to play
    - In High Score mode player can spend as many tickets as player has in the same game
    
-   - In 1 vs 1 mode players can bet a custom amount of tickets
-   - In 1 vs 1 mode players must bet the equal amount of tickets
-   - In 1 vs 1 mode Player A can open a new game an waits for a player B to join
-   - In 1 vs 1 mode Player A sets bet amount
-   - In 1 vs 1 mode Player B can look for and join games with desired bet amount
+   - In 1 vs 1 mode players can bet a custom amount of ERC20
+   - In 1 vs 1 mode players must bet the equal amount of ERC20
+   - In 1 vs 1 mode Player A pay one ticket to open a new game an waits for a player B to pay one ticket to join
+   - In 1 vs 1 mode Player A sets bet amount of ERC20
+   - In 1 vs 1 mode Player B can look for and join games with desired bet amount of ERC20
+   - In 1 vs 1 mode both players have to pay one ticket each to play.
    - In 1 vs 1 mode both players press a ready button and after a short timer the game starts 
    - In 1 vs 1 mode both players receive the same random images, same random decks and same random expiring time per try
    - In 1 vs 1 mode a record of images used, expiring time, difficulty, time to match and image matched are generated per try
 
+   - In multiplayer mode Player 1 pay one ticket and deposit the bet amount of ERC20 sets the number of participants and waits to other players to pay one ticket to join
+   - In multiplayer mode Players can look for and join games with desired bet amount of ERC20
+   - In multiplayer mode onece the number of participants is fulfill a short timer starts then game starts
+   - In multiplayer both players receive the same random images, same random decks and same random expiring time per try
 
 
 

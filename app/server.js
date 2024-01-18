@@ -275,7 +275,7 @@ io.on('connection', (socket) => {
 								} else {
 									const objectFromFile = JSON.parse(data);
 									const objFromFile = objectFromFile[Math.floor(Math.random() * (objectFromFile.length))];
-									console.log(`On channel: ${chnnl}`)
+									console.log(`On channel: ${chnnl} and ${JSON.stringify(objFromFile,null, 4)}`)
 									io.emit(chnnl, objFromFile)
 								}
 							});

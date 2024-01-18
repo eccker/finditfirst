@@ -155,7 +155,7 @@ let sketch = (p) => {
 			}
 		)
 		
-		difficulty = 8
+		difficulty = 2
 		encodeSendJWTRequestBuffer(difficulty)
 
 		scores[0] = 0
