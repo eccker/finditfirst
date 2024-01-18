@@ -75,22 +75,22 @@ class card {
                 }
             },
             "tags": [{
-                    "type": "search",
-                    "title": "nürnberg"
-                },
-                {
-                    "type": "search",
-                    "title": "deutschland"
-                },
-                {
-                    "type": "search",
-                    "title": "hat"
-                }
+                "type": "search",
+                "title": "nürnberg"
+            },
+            {
+                "type": "search",
+                "title": "deutschland"
+            },
+            {
+                "type": "search",
+                "title": "hat"
+            }
             ]
         }
     }
 
-    
+
     initCards(p) {
         for (let index = 0; index < 6; index++) {
             if (this.imgs.length > 5) {
@@ -113,11 +113,11 @@ class card {
     initCardsLocations(p) {
         for (let index = 0; index < 6; index++) {
             this.locationsX[index] = this.imgs[index].width / 2 + p.width / 8 + ((p.width / 4) * (index % 3)) + this.x;
-                if (index < 3) {
-                    this.locationsY[index] = (this.imgs[index].height / 2) + ((p.height / 4) * (0)) + this.y;
-                } else {
-                    this.locationsY[index] = (this.imgs[index].height / 2) + ((p.height / 4) * (1)) + this.y;
-                }
+            if (index < 3) {
+                this.locationsY[index] = (this.imgs[index].height / 2) + ((p.height / 4) * (0)) + this.y;
+            } else {
+                this.locationsY[index] = (this.imgs[index].height / 2) + ((p.height / 4) * (1)) + this.y;
+            }
         }
     }
 

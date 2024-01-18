@@ -23,6 +23,7 @@ let sketch = (p) => {
 	let draw_allowed;
 	let draw_1, d1, t1, t2
 
+	let elapsedTimesRegistered = []
 	let scores = []
 	let lifes = 3
 	let socket
@@ -158,7 +159,7 @@ let sketch = (p) => {
 		difficulty = 2
 		encodeSendJWTRequestBuffer(difficulty)
 
-		scores[0] = 0
+		elapsedTimesRegistered[0] = 0
 		cartaopuesta = new card(0, p.height / 16)
 		cartaopuesta.initCards(p)
 
@@ -245,8 +246,8 @@ let sketch = (p) => {
 			micarta.show(p)
 			p.text(`Good Selection. Press [Space Bar] to continue...`, 3 * p.width / 8, 7 * p.height / 16)
 
-			p.text(`Last time: ${((scores[scores.length-1])/1000).toFixed(2)}`, 7 * p.width / 8, p.height / 8)
-			p.text(`Difficulty: ${scores.length-1}`, 7 * p.width / 8, 2 * p.height / 8)
+			p.text(`Last time: ${((elapsedTimesRegistered[elapsedTimesRegistered.length-1])/1000).toFixed(2)}`, 7 * p.width / 8, p.height / 8)
+			p.text(`Difficulty: ${elapsedTimesRegistered.length-1}`, 7 * p.width / 8, 2 * p.height / 8)
 			p.text(`Lifes: ${lifes}`, 7 * p.width / 8, 3 * p.height / 8)
 
 			// myDeckBtn.hide()
@@ -257,8 +258,8 @@ let sketch = (p) => {
 			p.fill(200, 20, 15);
 			p.text(`Game Over. Press [r] to restart the Game`, 3 * p.width / 8, p.height / 2)
 
-			p.text(`Last time: ${((scores[scores.length-1])/1000).toFixed(2)}`, 6 * p.width / 8, p.height / 8)
-			p.text(`Difficulty: ${scores.length-1}`, 6 * p.width / 8, 2 * p.height / 8)
+			p.text(`Last time: ${((elapsedTimesRegistered[elapsedTimesRegistered.length-1])/1000).toFixed(2)}`, 6 * p.width / 8, p.height / 8)
+			p.text(`Difficulty: ${elapsedTimesRegistered.length-1}`, 6 * p.width / 8, 2 * p.height / 8)
 			p.text(`Lifes: ${lifes}`, 6 * p.width / 8, 3 * p.height / 8)
 			// myDeckBtn.hide()
 			opDeckBtn.hide()
@@ -268,8 +269,8 @@ let sketch = (p) => {
             p.fill(200, 20, 15);
 			p.text(`Time expired, you spent a ticket. Now you have ${lifes} tickets. Press [space] to continue the Game`, p.width / 8, p.height / 2)
 
-			p.text(`Last time: ${((scores[scores.length-1])/1000).toFixed(2)}`, 6 * p.width / 8, p.height / 8)
-			p.text(`Difficulty: ${scores.length-1}`, 6 * p.width / 8, 2 * p.height / 8)
+			p.text(`Last time: ${((elapsedTimesRegistered[elapsedTimesRegistered.length-1])/1000).toFixed(2)}`, 6 * p.width / 8, p.height / 8)
+			p.text(`Difficulty: ${elapsedTimesRegistered.length-1}`, 6 * p.width / 8, 2 * p.height / 8)
 			p.text(`Lifes: ${lifes}`, 6 * p.width / 8, 3 * p.height / 8)
 			opDeckBtn.hide()
         }
@@ -289,8 +290,8 @@ let sketch = (p) => {
 			cartaopuesta.show(p)
 			micarta.show(p)
 			p.fill(0, 200, 15);
-			p.text(`Last time: ${((scores[scores.length-1])/1000).toFixed(2)}`, 6.5 * p.width / 8, p.height / 8)
-			p.text(`Difficulty: ${scores.length-1}`, 6.5 * p.width / 8, 2 * p.height / 8)
+			p.text(`Last time: ${((elapsedTimesRegistered[elapsedTimesRegistered.length-1])/1000).toFixed(2)}`, 6.5 * p.width / 8, p.height / 8)
+			p.text(`Difficulty: ${elapsedTimesRegistered.length-1}`, 6.5 * p.width / 8, 2 * p.height / 8)
 			p.text(`Lifes: ${lifes}`, 6.5 * p.width / 8, 3 * p.height / 8)
 
 			now = p.millis()
@@ -360,8 +361,8 @@ let sketch = (p) => {
 				// difficulty = 16
 				minTime = 12.0
 				ranTime = 68.0
-				scores = []
-				scores[0] = 0
+				elapsedTimesRegistered = []
+				elapsedTimesRegistered[0] = 0
 				lifes = 3
 			}
 
@@ -449,7 +450,7 @@ let sketch = (p) => {
 			}
 		}
 	}
-	p.mousePressed = () => {
+	p.mousePressed = async () => {
 		if (gameStatus === `ready` || gameStatus === `won` || gameStatus === `expired`) {
     
 			micarta.initCardsLocations(p)
@@ -481,7 +482,7 @@ let sketch = (p) => {
 		}
 		if (gameStatus === `playing`) {
 			for (let idx = 0; idx < micarta.imgs.length; idx++) {
-				if (micarta.checkPressed(p, idx)) {
+				if (await micarta.checkPressed(p, idx)) {
 					console.log(`pressed ${idx}`)
 					draw_allowed = true;
 					imgDragged = idx
@@ -493,19 +494,21 @@ let sketch = (p) => {
 	}
 	}
 
-	p.mouseReleased = () => {
+	p.mouseReleased = async () => {
 		draw_allowed = false;
 		draw_1 = false;
 		for (let idx = 0; idx < cartaopuesta.imgs.length; idx++) {
-			if (micarta.checkOver(p, imgDragged, cartaopuesta, idx)) {
+			if (await micarta.checkOver(p, imgDragged, cartaopuesta, idx)) {
+                if(imgDragged === undefined) return
 				console.log(`my card ${imgDragged} is over card ${idx}`)
 				let thisImgData = micarta.data[imgDragged]
 				console.log(`It took you ${elapsedTime/1000} s to complete`)
 				p.background(10, 10, 10, 251)
 				if (thisImgData.id === cartaopuesta.data[idx].id && !verifyWon) {
 					verifyWon = true
-					console.log(`Incredible, you found a match! it took you ${Math.floor(elapsedTime)} ms to complete`)
-					scores.push(Math.floor(elapsedTime))
+					console.log(`Incredible, you found a match! it took you ${elapsedTime} ms to complete`)
+					elapsedTimesRegistered.push(elapsedTime)
+                    // scores.push()
 					micarta.locationsX[imgDragged] = cartaopuesta.locationsX[idx]
 					micarta.locationsY[imgDragged] = cartaopuesta.locationsY[idx]
 					gameStatus = `won`
@@ -521,6 +524,7 @@ let sketch = (p) => {
 					}
 					console.log(`ranTime: ${ranTime} minTime: ${minTime}`)
 					p.background(10, 10, 10, 251)
+                    imgDragged = undefined
 				} else if (!verifyWon) {
 					micarta.locationsX[imgDragged] = micarta.imgs[imgDragged].width / 2 + p.width / 8 + ((p.width / 4) * (imgDragged % 3)) + micarta.x;
 					if (imgDragged < 3) {
@@ -528,6 +532,7 @@ let sketch = (p) => {
 					} else {
 						micarta.locationsY[imgDragged] = (micarta.imgs[imgDragged].height / 2) + ((p.height / 4) * (1)) + micarta.y;
 					}
+                    imgDragged === undefined
 				}
 
 			}

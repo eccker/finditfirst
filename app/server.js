@@ -275,8 +275,12 @@ io.on('connection', (socket) => {
 								} else {
 									const objectFromFile = JSON.parse(data);
 									const objFromFile = objectFromFile[Math.floor(Math.random() * (objectFromFile.length))];
-									console.log(`On channel: ${chnnl} and ${JSON.stringify(objFromFile,null, 4)}`)
-									io.emit(chnnl, objFromFile)
+									console.log(`On channel: ${chnnl} and ${JSON.stringify(objFromFile?.id,null, 4)}`)
+
+                                    // const IDs = {objFromFile?.id, objFromFile?.urls};
+                                    const IDs = {id:objFromFile.id, urls:objFromFile.urls}
+                                    console.log(IDs)
+									io.emit(chnnl, IDs)
 								}
 							});
 						});						
