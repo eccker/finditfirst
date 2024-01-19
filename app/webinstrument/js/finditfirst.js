@@ -19,6 +19,7 @@ let sketch = (p) => {
 	let bufferDeckImgs = []
 
 	let difficulty = 16
+    let shuffles = 0
 
 	let draw_allowed;
 	let draw_1, d1, t1, t2
@@ -189,10 +190,11 @@ let sketch = (p) => {
 		// })
 
 		opDeckBtn = p.createButton('Get Deck [b]');
-		opDeckBtn.position( 14 * p.width / 16, 7 * p.height / 16);
+		opDeckBtn.position( 14 * p.width / 16, 10 * p.height / 16);
 		opDeckBtn.style('position','fixed')
 		opDeckBtn.mousePressed( () => {
 			if (gameStatus === `playing`) {
+                shuffles++
 				for (let index = 0; index < 6; index++) {
 					if (cartaopuesta.imgs.length > 5) {
 						cartaopuesta.imgs = []
@@ -242,14 +244,40 @@ let sketch = (p) => {
 		}
 
 		if (gameStatus === `won`) {
+            p.fill(200,200,200)
+
+            p.text(`Time Left: ${((someHeartBeatPeriod - elapsedTime)/1000).toFixed(2)}`, p.width / 8, p.height / 32)
+            p.text(`Min Time: ${(minTime).toFixed(2)}`, 8*p.width / 32, p.height / 32)
+            p.text(`Max Time: ${(ranTime+minTime).toFixed(2)}`, 12*p.width / 32, p.height / 32)
+            p.text(`Current Time: ${((someHeartBeatPeriod)/1000).toFixed(2)}`, 16*p.width / 32, p.height / 32)
 			p.fill(0, 200, 15);
-			micarta.show(p)
-			p.text(`Good Selection. Press [Space Bar] to continue...`, 3 * p.width / 8, 7 * p.height / 16)
+            
+            p.text(`Took you: ${((elapsedTime)/1000).toFixed(2)}`, 22*p.width / 32, p.height / 32)
+            p.fill(200,20,20)
+            p.text(`Shuffles: ${(shuffles).toFixed(0)}`, 26*p.width / 32, p.height / 32)
 
-			p.text(`Last time: ${((elapsedTimesRegistered[elapsedTimesRegistered.length-1])/1000).toFixed(2)}`, 7 * p.width / 8, p.height / 8)
-			p.text(`Difficulty: ${elapsedTimesRegistered.length-1}`, 7 * p.width / 8, 2 * p.height / 8)
-			p.text(`Lifes: ${lifes}`, 7 * p.width / 8, 3 * p.height / 8)
+			p.fill(0, 200, 15);
+			// micarta.show(p)
 
+			p.text(`Good Selection. Press [Space Bar] to continue...`, 3 * p.width / 8, 8 * p.height / 16)
+
+			p.text(`Last time: ${((elapsedTimesRegistered[elapsedTimesRegistered.length-1])/1000).toFixed(2)}`, 6.5 * p.width / 8, p.height / 8)
+			p.text(`Difficulty: ${difficulty-1}`, 6.5 * p.width / 8, 2 * p.height / 8)
+			p.text(`Lifes: ${lifes}`, 6.5 * p.width / 8, 3 * p.height / 8)
+			p.text(`Total Points: ${(scores.reduce((partialSum, a) => partialSum + a, 0).toFixed(4))}`, 6.5 * p.width / 8, 4 * p.height / 8)
+
+            p.fill(100, 100, 35);
+
+			p.text(`Erned Points: ${(scores[scores.length-1]).toFixed(4)}`, 6.5 * p.width / 8, 10 * p.height / 16)
+			p.fill(0, 200, 15);
+
+            p.text(`Difficulty Points: ${((difficulty-1)*10).toFixed(4)}`, 6.5 * p.width / 8, 11 * p.height / 16)
+			p.text(`Time Points: ${((500/Math.floor(elapsedTime)) * 100).toFixed(4)}`, 6.5 * p.width / 8, 12 * p.height / 16)
+			p.fill(200, 20, 15);
+            p.text(`Shuffles Penalties: ${shuffles.toFixed(0)}`, 6.5 * p.width / 8, 13 * p.height / 16)
+
+
+            
 			// myDeckBtn.hide()
 			opDeckBtn.hide()
 		}
@@ -259,8 +287,10 @@ let sketch = (p) => {
 			p.text(`Game Over. Press [r] to restart the Game`, 3 * p.width / 8, p.height / 2)
 
 			p.text(`Last time: ${((elapsedTimesRegistered[elapsedTimesRegistered.length-1])/1000).toFixed(2)}`, 6 * p.width / 8, p.height / 8)
-			p.text(`Difficulty: ${elapsedTimesRegistered.length-1}`, 6 * p.width / 8, 2 * p.height / 8)
+			p.text(`Difficulty: ${difficulty}`, 6 * p.width / 8, 2 * p.height / 8)
 			p.text(`Lifes: ${lifes}`, 6 * p.width / 8, 3 * p.height / 8)
+			p.text(`Total Points: ${(scores.reduce((partialSum, a) => partialSum + a, 0).toFixed(4))}`, 6.5 * p.width / 8, 4 * p.height / 8)
+
 			// myDeckBtn.hide()
 			opDeckBtn.hide()
 		}
@@ -270,8 +300,10 @@ let sketch = (p) => {
 			p.text(`Time expired, you spent a ticket. Now you have ${lifes} tickets. Press [space] to continue the Game`, p.width / 8, p.height / 2)
 
 			p.text(`Last time: ${((elapsedTimesRegistered[elapsedTimesRegistered.length-1])/1000).toFixed(2)}`, 6 * p.width / 8, p.height / 8)
-			p.text(`Difficulty: ${elapsedTimesRegistered.length-1}`, 6 * p.width / 8, 2 * p.height / 8)
+			p.text(`Difficulty: ${difficulty}`, 6 * p.width / 8, 2 * p.height / 8)
 			p.text(`Lifes: ${lifes}`, 6 * p.width / 8, 3 * p.height / 8)
+			p.text(`Total Points: ${(scores.reduce((partialSum, a) => partialSum + a, 0).toFixed(4))}`, 6.5 * p.width / 8, 4 * p.height / 8)
+
 			opDeckBtn.hide()
         }
 
@@ -291,8 +323,10 @@ let sketch = (p) => {
 			micarta.show(p)
 			p.fill(0, 200, 15);
 			p.text(`Last time: ${((elapsedTimesRegistered[elapsedTimesRegistered.length-1])/1000).toFixed(2)}`, 6.5 * p.width / 8, p.height / 8)
-			p.text(`Difficulty: ${elapsedTimesRegistered.length-1}`, 6.5 * p.width / 8, 2 * p.height / 8)
+			p.text(`Difficulty: ${difficulty}`, 6.5 * p.width / 8, 2 * p.height / 8)
 			p.text(`Lifes: ${lifes}`, 6.5 * p.width / 8, 3 * p.height / 8)
+			p.text(`Total Points: ${(scores.reduce((partialSum, a) => partialSum + a, 0).toFixed(4))}`, 6.5 * p.width / 8, 4 * p.height / 8)
+          
 
 			now = p.millis()
 			elapsedTime = now - lastGeneratedTime
@@ -304,11 +338,17 @@ let sketch = (p) => {
                 p.fill(200,200,200)
                 p.textSize(24);
 	        	p.text(`Time Left: ${((someHeartBeatPeriod - elapsedTime)/1000).toFixed(2)}`, p.width / 8, p.height / 32)
+	        	p.text(`Min Time: ${(minTime).toFixed(2)}`, 8*p.width / 32, p.height / 32)
+	        	p.text(`Max Time: ${(ranTime+minTime).toFixed(2)}`, 12*p.width / 32, p.height / 32)
+	        	p.text(`Current Time: ${((someHeartBeatPeriod)/1000).toFixed(2)}`, 16*p.width / 32, p.height / 32)
+	        	p.text(`Shuffles: ${(shuffles).toFixed(0)}`, 24*p.width / 32, p.height / 32)
+
+
 
 			}
 			if (elapsedTime > someHeartBeatPeriod) {
 				lastGeneratedTime = now
-
+                shuffles=0
 				someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * ranTime) + minTime)
 				tempcol = "#" + makeHexString(6)
 
@@ -331,9 +371,9 @@ let sketch = (p) => {
 				}
 				lifes = lifes - 1
                 gameStatus = `expired`
+                shuffles = 0
 				if (lifes == 0) {
 					gameStatus = `lose`	
-					difficulty = 16
 					encodeSendJWTRequestBuffer(difficulty)
 				}
 
@@ -358,11 +398,14 @@ let sketch = (p) => {
 		if (p.key === 'r') {
 			if (gameStatus === `lose`) {
 				gameStatus = `ready`
-				// difficulty = 16
+				difficulty = 2
 				minTime = 12.0
 				ranTime = 68.0
+                shuffles = 0
 				elapsedTimesRegistered = []
 				elapsedTimesRegistered[0] = 0
+                scores = []
+                scores[0] = 0
 				lifes = 3
 			}
 
@@ -373,6 +416,7 @@ let sketch = (p) => {
 		}
 		if (p.key === 'b') {
 			if (gameStatus === `playing`) {
+                shuffles++
 				for (let index = 0; index < 6; index++) {
 					if (cartaopuesta.imgs.length > 5) {
 						cartaopuesta.imgs = []
@@ -420,7 +464,7 @@ let sketch = (p) => {
 		}
 		if (p.key === ' ') {
 			if (gameStatus === `ready` || gameStatus === `won` || gameStatus === `expired`) {
-    
+                shuffles=0
 				micarta.initCardsLocations(p)
 				gameStatus = `playing`
 
@@ -452,7 +496,7 @@ let sketch = (p) => {
 	}
 	p.mousePressed = async () => {
 		if (gameStatus === `ready` || gameStatus === `won` || gameStatus === `expired`) {
-    
+            shuffles=0
 			micarta.initCardsLocations(p)
 			gameStatus = `playing`
 
@@ -508,7 +552,14 @@ let sketch = (p) => {
 					verifyWon = true
 					console.log(`Incredible, you found a match! it took you ${elapsedTime} ms to complete`)
 					elapsedTimesRegistered.push(elapsedTime)
-                    // scores.push()
+                    scores.push((difficulty * 10) + ((500/Math.floor(elapsedTime)) * 100) - (shuffles))
+                    console.log(`DEBUG::::::difficulty points = ${difficulty * 10}`)
+                    console.log(`DEBUG::::::elapsedTime points = ${((500/Math.floor(elapsedTime)) * 100)}`)
+                    console.log(`DEBUG::::::minus shuffles points = ${(shuffles)}`)
+                    console.log(`DEBUG::::::Last score points = ${scores[scores.length-1]}`)
+                    console.log(`DEBUG::::::Total score points = ${scores.reduce((partialSum, a) => partialSum + a, 0)}`)
+
+
 					micarta.locationsX[imgDragged] = cartaopuesta.locationsX[idx]
 					micarta.locationsY[imgDragged] = cartaopuesta.locationsY[idx]
 					gameStatus = `won`
@@ -525,6 +576,7 @@ let sketch = (p) => {
 					console.log(`ranTime: ${ranTime} minTime: ${minTime}`)
 					p.background(10, 10, 10, 251)
                     imgDragged = undefined
+                    
 				} else if (!verifyWon) {
 					micarta.locationsX[imgDragged] = micarta.imgs[imgDragged].width / 2 + p.width / 8 + ((p.width / 4) * (imgDragged % 3)) + micarta.x;
 					if (imgDragged < 3) {
