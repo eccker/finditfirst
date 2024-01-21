@@ -37,6 +37,8 @@ let sketch = (p) => {
 
     let channel
 
+    let gridSpaceX
+    let gridSpaceY
 
 
     let makeHexString = (length = 6) => {
@@ -136,6 +138,8 @@ let sketch = (p) => {
     }
 
     p.preload = () => {
+        gridSpaceX = p.windowWidth / 32
+        gridSpaceY = p.windowHeight / 32
 
 
     }
@@ -181,10 +185,10 @@ let sketch = (p) => {
 
                     if (p.windowWidth > p.windowHeight) {
                         // 'landscape';
-                        bufferDeckImgs.push(cropAndResizeImage(_img, 200, 128))
+                        bufferDeckImgs.push(cropAndResizeImage(_img, gridSpaceX*6, gridSpaceY*4))
                     } else {
                         // 'portrait';
-                        bufferDeckImgs.push(cropAndResizeImage(_img, 128, 200))
+                        bufferDeckImgs.push(cropAndResizeImage(_img, gridSpaceX*4, gridSpaceY*6))
                     }
 
                     bufferDeckData.push(data)
@@ -192,16 +196,17 @@ let sketch = (p) => {
             }
         )
 
+        
+        elapsedTimesRegistered[0] = 0
+        cartaopuesta = new card(gridSpaceX, gridSpaceY*3)
+        cartaopuesta.initCards(p,cropAndResizeImage)
+        
+        micarta = new card(gridSpaceX, gridSpaceY*16)
+        micarta.initCards(p,cropAndResizeImage)
+        
         difficulty = 2
         encodeSendJWTRequestBuffer(difficulty)
-
-        elapsedTimesRegistered[0] = 0
-        cartaopuesta = new card(0, p.height / 16)
-        cartaopuesta.initCards(p)
-
-        micarta = new card(0, p.height / 2)
-        micarta.initCards(p)
-
+        
         someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * ranTime) + minTime)
         draw_allowed = true;
         p.background(10, 10, 10, 251)
@@ -225,7 +230,7 @@ let sketch = (p) => {
         // })
 
         opDeckBtn = p.createButton('Get Deck [b]');
-        opDeckBtn.position(14 * p.width / 16, 10 * p.height / 16);
+        opDeckBtn.position(28*gridSpaceX, 28*gridSpaceY);
         opDeckBtn.style('position', 'fixed')
         opDeckBtn.mousePressed(() => {
             if (gameStatus === `playing`) {
@@ -613,16 +618,20 @@ let sketch = (p) => {
                     imgDragged = undefined
 
                 } else if (!verifyWon) {
-                    micarta.locationsX[imgDragged] = micarta.imgs[imgDragged].width / 2 + p.width / 8 + ((p.width / 4) * (imgDragged % 3)) + micarta.x;
-                    if (imgDragged < 3) {
-                        micarta.locationsY[imgDragged] = (micarta.imgs[imgDragged].height / 2) + ((p.height / 4) * (0)) + micarta.y;
-                    } else {
-                        micarta.locationsY[imgDragged] = (micarta.imgs[imgDragged].height / 2) + ((p.height / 4) * (1)) + micarta.y;
-                    }
+                    // micarta.locationsX[imgDragged] = micarta.imgs[imgDragged].width / 2 + p.width / 8 + ((p.width / 4) * (imgDragged % 3)) + micarta.x;
+                    // if (imgDragged < 3) {
+                    //     micarta.locationsY[imgDragged] = (micarta.imgs[imgDragged].height / 2) + ((p.height / 4) * (0)) + micarta.y;
+                    // } else {
+                    //     micarta.locationsY[imgDragged] = (micarta.imgs[imgDragged].height / 2) + ((p.height / 4) * (1)) + micarta.y;
+                    // }
+                    micarta.initCardsLocations(p)
+                    imgDragged === undefined
+                } 
+
+            } else {
+                    micarta.initCardsLocations(p)
                     imgDragged === undefined
                 }
-
-            }
         }
     }
 

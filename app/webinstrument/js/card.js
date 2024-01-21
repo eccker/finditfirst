@@ -91,32 +91,39 @@ class card {
     }
 
 
-    initCards(p) {
+    initCards(p, cropAndResizeImage) {
         for (let index = 0; index < 6; index++) {
             if (this.imgs.length > 5) {
                 this.imgs = []
                 this.data = []
             }
             p.loadImage(this.baseData.urls.thumb, _img => {
-                this.imgs.push(_img)
+                let gridSpaceX = p.windowWidth / 32
+                let gridSpaceY = p.windowHeight / 32
+                let processedImage = cropAndResizeImage(_img, gridSpaceX * 4, gridSpaceY * 6)
+                this.imgs.push(processedImage)
                 this.data.push(this.baseData)
-                this.locationsX[index] = _img.width / 2 + p.width / 8 + ((p.width / 4) * (index % 3)) + this.x;
+
+
+                this.locationsX[index] = processedImage.width / 2 + gridSpaceX + ((processedImage.width + gridSpaceX) * (index % 3)) + this.x;
                 if (index < 3) {
-                    this.locationsY[index] = (_img.height / 2) + ((p.height / 4) * (0)) + this.y;
+                    this.locationsY[index] = (processedImage.height / 2) + ((processedImage.height) * (0)) + this.y;
                 } else {
-                    this.locationsY[index] = (_img.height / 2) + ((p.height / 4) * (1)) + this.y;
+                    this.locationsY[index] = (processedImage.height / 2) + ((processedImage.height + gridSpaceY) * (1)) + this.y;
                 }
             })
         }
     }
 
     initCardsLocations(p) {
+        let gridSpaceX = p.windowWidth / 32
+        let gridSpaceY = p.windowHeight / 32
         for (let index = 0; index < 6; index++) {
-            this.locationsX[index] = this.imgs[index].width / 2 + p.width / 8 + ((p.width / 4) * (index % 3)) + this.x;
+            this.locationsX[index] = this.imgs[index].width / 2 + gridSpaceX + ((this.imgs[index].width + gridSpaceX) * (index % 3)) + this.x;
             if (index < 3) {
-                this.locationsY[index] = (this.imgs[index].height / 2) + ((p.height / 4) * (0)) + this.y;
+                this.locationsY[index] = (this.imgs[index].height / 2) + ((this.imgs[index].height) * (0)) + this.y;
             } else {
-                this.locationsY[index] = (this.imgs[index].height / 2) + ((p.height / 4) * (1)) + this.y;
+                this.locationsY[index] = (this.imgs[index].height / 2) + ((this.imgs[index].height + gridSpaceY) * (1)) + this.y;
             }
         }
     }
@@ -156,6 +163,8 @@ class card {
         }
         return result
     }
+
+
 
     show(p) {
         for (let index = 0; index < 6; index++) {

@@ -279,7 +279,7 @@ io.on('connection', (socket) => {
 
                                     // const IDs = {objFromFile?.id, objFromFile?.urls};
                                     const IDs = {id:objFromFile.id, urls:objFromFile.urls}
-                                    console.log(IDs)
+                                    // console.log(IDs)
 									io.emit(chnnl, IDs)
 								}
 							});
