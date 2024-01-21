@@ -31,7 +31,7 @@ let sketch = (p) => {
 
     let gameStatus = `ready`
     let verifyWon = false
-    // let myDeckBtn
+
     let opDeckBtn
 
 
@@ -117,20 +117,20 @@ let sketch = (p) => {
 
         let cropWidth, cropHeight;
         if (imgAspect > targetAspect) {
-            // Image is wider than target aspect ratio
+
             cropWidth = img.height * targetAspect;
             cropHeight = img.height;
         } else {
-            // Image is taller than target aspect ratio
+
             cropWidth = img.width;
             cropHeight = img.width / targetAspect;
         }
 
-        // Calculate top-left corner for cropping
+
         let x = (img.width - cropWidth) / 2;
         let y = (img.height - cropHeight) / 2;
 
-        // Create a graphics object to perform operations
+
         let gfx = p.createGraphics(targetW, targetH);
         gfx.image(img, 0, 0, targetW, targetH, x, y, cropWidth, cropHeight);
 
@@ -140,7 +140,7 @@ let sketch = (p) => {
     p.preload = () => {
         gridSpaceX = p.windowWidth / 32
         gridSpaceY = p.windowHeight / 32
-        
+
 
     }
 
@@ -151,21 +151,21 @@ let sketch = (p) => {
         canvasApp.position(0, 0, 'fixed')
         p.select('#initialDiv') ? p.select('#initialDiv').remove() : null
         p.frameRate(24)
-        p.background(127) // clear the screen
+        p.background(127)
         p.imageMode(p.CENTER);
         draw_allowed = true;
         const _URL = window.location.search
-        // console.log(`URL is: ${_URL}`);
+
 
         const urlParams = new URLSearchParams(_URL);
-        // console.log('channel urlParams is: ' + urlParams.get('channel'))
+
         channel = urlParams.get('channel') ? urlParams.get('channel') : `channel000`
-        // console.log(`channel is: ${channel}`)
+
         if (p.windowWidth > p.windowHeight) {
-            // 'landscape';
+
             p.textSize(24)
         } else {
-            // 'portrait';
+
             p.textSize(12)
         }
 
@@ -173,7 +173,7 @@ let sketch = (p) => {
             transports: ['websocket']
         })
         socket.on('connect', () => {
-            // console.log(`Este cliente se ha conectado `);
+
         })
         socket.on('disconnect', () => {
             socket.removeAllListeners()
@@ -186,14 +186,14 @@ let sketch = (p) => {
                 }
 
                 p.loadImage(data.urls.thumb, _img => {
-                    // console.log(`\n\n\nDEBUG:::::: rebuffering. _img.width is ${_img.width}, _img.height is ${_img.height}`)
+
 
                     if (p.windowWidth > p.windowHeight) {
-                        // 'landscape';
-                        bufferDeckImgs.push(cropAndResizeImage(_img, gridSpaceX*6, gridSpaceY*6))
+
+                        bufferDeckImgs.push(cropAndResizeImage(_img, gridSpaceX * 6, gridSpaceY * 6))
                     } else {
-                        // 'portrait';
-                        bufferDeckImgs.push(cropAndResizeImage(_img, gridSpaceX*6, gridSpaceY*6))
+
+                        bufferDeckImgs.push(cropAndResizeImage(_img, gridSpaceX * 6, gridSpaceY * 6))
                     }
 
                     bufferDeckData.push(data)
@@ -201,41 +201,22 @@ let sketch = (p) => {
             }
         )
 
-        
         elapsedTimesRegistered[0] = 0
-        cartaopuesta = new card(gridSpaceX*3, gridSpaceY*3)
-        cartaopuesta.initCards(p,cropAndResizeImage)
-        
-        micarta = new card(gridSpaceX*3, gridSpaceY*18)
-        micarta.initCards(p,cropAndResizeImage)
-        
+        cartaopuesta = new card(gridSpaceX * 3, gridSpaceY * 3)
+        cartaopuesta.initCards(p, cropAndResizeImage)
+
+        micarta = new card(gridSpaceX * 3, gridSpaceY * 18)
+        micarta.initCards(p, cropAndResizeImage)
+
         difficulty = 2
         encodeSendJWTRequestBuffer(difficulty)
-        
+
         someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * ranTime) + minTime)
         draw_allowed = true;
         p.background(10, 10, 10, 251)
-        // myDeckBtn = p.createButton('Get Deck [m]');
-        // myDeckBtn.position( 14 * p.width / 16, 8 * p.height / 16);
-        // myDeckBtn.style('position','fixed')
-        // myDeckBtn.hide()
-        // myDeckBtn.mousePressed( () => {
-        // 	if (gameStatus === `playing`) {
-        // 		for (let index = 0; index < 6; index++) {
-        // 			if (micarta.imgs.length > 5) {
-        // 				micarta.imgs = []
-        // 				micarta.data = []
-        // 			}
-        // 			let rn = Math.floor(Math.random() * bufferDeckImgs.length)
-        // 			micarta.imgs.push(bufferDeckImgs[rn])
-        // 			micarta.data.push(bufferDeckData[rn])
 
-        // 		}
-        // 	}
-        // })
-
-        opDeckBtn = p.createButton('Get Deck [b]');
-        opDeckBtn.position(28*gridSpaceX, 28*gridSpaceY);
+        opDeckBtn = p.createButton('Deck [b]');
+        opDeckBtn.position(25 * gridSpaceX, 28 * gridSpaceY);
         opDeckBtn.style('position', 'fixed')
         opDeckBtn.mousePressed(() => {
             if (gameStatus === `playing`) {
@@ -264,8 +245,8 @@ let sketch = (p) => {
 
     p.windowResized = () => {
         p.resizeCanvas(p.windowWidth, p.windowHeight)
-        // myDeckBtn.position( 14 * p.width / 16, 8 * p.height / 16);
-        // myDeckBtn.style('position','fixed')
+
+
 
         opDeckBtn.position(14 * p.width / 16, 7 * p.height / 16);
         opDeckBtn.style('position', 'fixed')
@@ -278,86 +259,91 @@ let sketch = (p) => {
     p.draw = () => {
         p.background(10, 10, 10, 251)
 
-        // determine game current state: ready, playing, win, lose
+
         if (gameStatus === `ready`) {
             p.fill(200, 200, 15);
-            p.text(`Ready? Press [Space Bar] or Tap to Start`, 3 * p.width / 8, 7 * p.height / 16, 4 * p.width / 8, 4*p.height / 16)
-            p.text(`How to Play: `, 3 * p.width / 8, 10 * p.height / 16)
-            p.text(`Drag and Drop one image that matches one of the upper 6  `, 3 * p.width / 8, 11 * p.height / 16, 4 * p.width / 8, 4*p.height / 16)
-            // myDeckBtn.hide()
+            p.text(`Ready? Press [Space Bar] or Tap to Start`, gridSpaceX * 7, gridSpaceY * 17, gridSpaceX*18, gridSpaceY*6)
+            p.text(`How to Play: `, gridSpaceX * 7, gridSpaceY * 18, gridSpaceX*18, gridSpaceY*6)
+            p.text(`Drag and Drop one image from the 6 bottom that matches one of the upper 6  `, gridSpaceX * 7, gridSpaceY * 19, gridSpaceX*18, gridSpaceY*6)
+
             opDeckBtn.hide()
         }
 
         if (gameStatus === `won`) {
             p.fill(200, 200, 200)
 
-            p.text(`Time Left: ${((someHeartBeatPeriod - elapsedTime) / 1000).toFixed(2)}`, p.width / 8, p.height / 32)
-            p.text(`Min Time: ${(minTime).toFixed(2)}`, 8 * p.width / 32, p.height / 32)
-            p.text(`Max Time: ${(ranTime + minTime).toFixed(2)}`, 12 * p.width / 32, p.height / 32)
-            p.text(`Current Time: ${((someHeartBeatPeriod) / 1000).toFixed(2)}`, 16 * p.width / 32, p.height / 32)
+            p.text(`Time Left: ${((someHeartBeatPeriod - elapsedTime) / 1000).toFixed(2)}`, gridSpaceX*4, 12)
+            p.text(`Min Time: ${(minTime).toFixed(2)}`, gridSpaceX*4, 12*2)
+            p.text(`Max Time: ${(ranTime + minTime).toFixed(2)}`, gridSpaceX*4, 12*3)
+            p.text(`Current Time: ${((someHeartBeatPeriod) / 1000).toFixed(2)}`, gridSpaceX*4, 12*4)
+            p.text(`Elapsed Time: ${((elapsedTime) / 1000).toFixed(2)}`, gridSpaceX*4, 12*5)
+            
+            
             p.fill(0, 200, 15);
-
-            p.text(`Took you: ${((elapsedTime) / 1000).toFixed(2)}`, 22 * p.width / 32, p.height / 32)
+            
+            p.text(`Took you: ${((elapsedTime) / 1000).toFixed(2)}`, gridSpaceX*18, 12*3)
             p.fill(200, 20, 20)
-            p.text(`Shuffles: ${(shuffles).toFixed(0)}`, 26 * p.width / 32, p.height / 32)
+            p.text(`Shuffles: ${(shuffles).toFixed(0)}`, gridSpaceX*18, 12*2)
+            
 
             p.fill(0, 200, 15);
-            // micarta.show(p)
 
-            p.text(`Good Selection. Press [Space Bar] to continue...`, 3 * p.width / 8, 8 * p.height / 16)
 
-            p.text(`Last time: ${((elapsedTimesRegistered[elapsedTimesRegistered.length - 1]) / 1000).toFixed(2)}`, 6.5 * p.width / 8, p.height / 8)
-            p.text(`Difficulty: ${difficulty - 1}`, 6.5 * p.width / 8, 2 * p.height / 8)
-            p.text(`Lifes: ${lifes}`, 6.5 * p.width / 8, 3 * p.height / 8)
-            p.text(`Total Points: ${(scores.reduce((partialSum, a) => partialSum + a, 0).toFixed(4))}`, 6.5 * p.width / 8, 4 * p.height / 8)
+            p.text(`Good Selection. Press [Space Bar] to continue...`, gridSpaceX * 7, gridSpaceY * 17, gridSpaceX*18, gridSpaceY*6)
+
+            p.text(`Last time: ${((elapsedTimesRegistered[elapsedTimesRegistered.length - 1]) / 1000).toFixed(2)}`, gridSpaceX*25, gridSpaceY*3)
+            p.text(`Difficulty: ${difficulty-1}`, gridSpaceX*25, gridSpaceY*5)
+            p.text(`Lifes: ${lifes}`, gridSpaceX*25, gridSpaceY*7)
+            p.text(`Points: ${(scores.reduce((partialSum, a) => partialSum + a, 0).toFixed(2))}`, gridSpaceX*25, gridSpaceY*9)
 
             p.fill(100, 100, 35);
 
-            p.text(`Erned Points: ${(scores[scores.length - 1]).toFixed(4)}`, 6.5 * p.width / 8, 10 * p.height / 16)
+            p.text(`Erned Points: ${(scores[scores.length - 1]).toFixed(4)}`, gridSpaceX * 7, gridSpaceY * 10, gridSpaceX*18, gridSpaceY*6)
             p.fill(0, 200, 15);
 
-            p.text(`Difficulty Points: ${((difficulty - 1) * 10).toFixed(4)}`, 6.5 * p.width / 8, 11 * p.height / 16)
-            p.text(`Time Points: ${((500 / Math.floor(elapsedTime)) * 100).toFixed(4)}`, 6.5 * p.width / 8, 12 * p.height / 16)
+            p.text(`Difficulty Points: ${((difficulty - 1) * 10).toFixed(4)}`, gridSpaceX * 7, gridSpaceY * 11, gridSpaceX*18, gridSpaceY*6)
+            p.text(`Time Points: ${((500 / Math.floor(elapsedTime)) * 100).toFixed(4)}`, gridSpaceX * 7, gridSpaceY * 12, gridSpaceX*18, gridSpaceY*6)
             p.fill(200, 20, 15);
-            p.text(`Shuffles Penalties: ${shuffles.toFixed(0)}`, 6.5 * p.width / 8, 13 * p.height / 16)
+            p.text(`Shuffles Penalties: ${shuffles.toFixed(0)}`, gridSpaceX * 7, gridSpaceY * 13, gridSpaceX*18, gridSpaceY*6)
 
 
 
-            // myDeckBtn.hide()
+
             opDeckBtn.hide()
         }
 
         if (gameStatus === `lose`) {
             p.fill(200, 20, 15);
-            p.text(`Game Over. Press [r] to restart the Game`, 3 * p.width / 8, p.height / 2)
+            p.text(`Game Over. Press [r] to restart the Game`, gridSpaceX * 7, gridSpaceY * 17, gridSpaceX*18, gridSpaceY*6)
 
-            p.text(`Last time: ${((elapsedTimesRegistered[elapsedTimesRegistered.length - 1]) / 1000).toFixed(2)}`, 6 * p.width / 8, p.height / 8)
-            p.text(`Difficulty: ${difficulty}`, 6 * p.width / 8, 2 * p.height / 8)
-            p.text(`Lifes: ${lifes}`, 6 * p.width / 8, 3 * p.height / 8)
-            p.text(`Total Points: ${(scores.reduce((partialSum, a) => partialSum + a, 0).toFixed(4))}`, 6.5 * p.width / 8, 4 * p.height / 8)
+            p.text(`Last time: ${((elapsedTimesRegistered[elapsedTimesRegistered.length - 1]) / 1000).toFixed(2)}`, gridSpaceX*25, gridSpaceY*3)
+            p.text(`Difficulty: ${difficulty-1}`, gridSpaceX*25, gridSpaceY*5)
+            p.text(`Lifes: ${lifes}`, gridSpaceX*25, gridSpaceY*7)
+            p.text(`Points: ${(scores.reduce((partialSum, a) => partialSum + a, 0).toFixed(2))}`, gridSpaceX*25, gridSpaceY*9)
 
-            // myDeckBtn.hide()
             opDeckBtn.hide()
         }
 
         if (gameStatus === `expired`) {
             p.fill(200, 20, 15);
-            p.text(`Time expired, you spent a ticket. Now you have ${lifes} tickets. Press [space] to continue the Game`, p.width / 8, p.height / 2)
 
-            p.text(`Last time: ${((elapsedTimesRegistered[elapsedTimesRegistered.length - 1]) / 1000).toFixed(2)}`, 6 * p.width / 8, p.height / 8)
-            p.text(`Difficulty: ${difficulty}`, 6 * p.width / 8, 2 * p.height / 8)
-            p.text(`Lifes: ${lifes}`, 6 * p.width / 8, 3 * p.height / 8)
-            p.text(`Total Points: ${(scores.reduce((partialSum, a) => partialSum + a, 0).toFixed(4))}`, 6.5 * p.width / 8, 4 * p.height / 8)
+
+            p.text(`Time expired, you spent a ticket. Now you have ${lifes} tickets. Press [space] to continue the Game`, gridSpaceX * 7, gridSpaceY * 17, gridSpaceX*18, gridSpaceY*6)
+
+            p.text(`Last time: ${((elapsedTimesRegistered[elapsedTimesRegistered.length - 1]) / 1000).toFixed(2)}`, gridSpaceX*25, gridSpaceY*3)
+            p.text(`Difficulty: ${difficulty-1}`, gridSpaceX*25, gridSpaceY*5)
+            p.text(`Lifes: ${lifes}`, gridSpaceX*25, gridSpaceY*7)
+            p.text(`Points: ${(scores.reduce((partialSum, a) => partialSum + a, 0).toFixed(2))}`, gridSpaceX*25, gridSpaceY*9)
 
             opDeckBtn.hide()
         }
 
         if (gameStatus === `playing`) {
 
-            // myDeckBtn.show()
+
             opDeckBtn.show()
 
-            // playing
+
             if (draw_allowed) {
                 if (draw_1) {
                     micarta.locationsX[imgDragged] = p.mouseX - t1;
@@ -367,10 +353,10 @@ let sketch = (p) => {
             cartaopuesta.show(p)
             micarta.show(p)
             p.fill(0, 200, 15);
-            p.text(`Last time: ${((elapsedTimesRegistered[elapsedTimesRegistered.length - 1]) / 1000).toFixed(2)}`, 6.5 * p.width / 8, p.height / 8)
-            p.text(`Difficulty: ${difficulty}`, 6.5 * p.width / 8, 2 * p.height / 8)
-            p.text(`Lifes: ${lifes}`, 6.5 * p.width / 8, 3 * p.height / 8)
-            p.text(`Total Points: ${(scores.reduce((partialSum, a) => partialSum + a, 0).toFixed(4))}`, 6.5 * p.width / 8, 4 * p.height / 8)
+            p.text(`Last time: ${((elapsedTimesRegistered[elapsedTimesRegistered.length - 1]) / 1000).toFixed(2)}`, gridSpaceX*25, gridSpaceY*3)
+            p.text(`Difficulty: ${difficulty}`, gridSpaceX*25, gridSpaceY*5)
+            p.text(`Lifes: ${lifes}`, gridSpaceX*25, gridSpaceY*7)
+            p.text(`Points: ${(scores.reduce((partialSum, a) => partialSum + a, 0).toFixed(2))}`, gridSpaceX*25, gridSpaceY*9)
 
 
             now = p.millis()
@@ -379,14 +365,15 @@ let sketch = (p) => {
             if (elapsedTime < someHeartBeatPeriod) {
                 p.fill(tempcol)
                 p.noStroke()
-                p.rect(0, 0, gridSpaceX*3, altura)
+                p.rect(0, 0, gridSpaceX * 3, altura)
                 p.fill(200, 200, 200)
-                // p.textSize(24);
-                p.text(`Time Left: ${((someHeartBeatPeriod - elapsedTime) / 1000).toFixed(2)}`, p.width / 8, p.height / 32)
-                p.text(`Min Time: ${(minTime).toFixed(2)}`, 8 * p.width / 32, p.height / 32)
-                p.text(`Max Time: ${(ranTime + minTime).toFixed(2)}`, 12 * p.width / 32, p.height / 32)
-                p.text(`Current Time: ${((someHeartBeatPeriod) / 1000).toFixed(2)}`, 16 * p.width / 32, p.height / 32)
-                p.text(`Shuffles: ${(shuffles).toFixed(0)}`, 24 * p.width / 32, p.height / 32)
+
+                p.text(`Time Left: ${((someHeartBeatPeriod - elapsedTime) / 1000).toFixed(2)}`, gridSpaceX*4, 12)
+                p.text(`Min Time: ${(minTime).toFixed(2)}`, gridSpaceX*4, 12*2)
+                p.text(`Max Time: ${(ranTime + minTime).toFixed(2)}`, gridSpaceX*4, 12*3)
+                p.text(`Current Time: ${((someHeartBeatPeriod) / 1000).toFixed(2)}`, gridSpaceX*4, 12*4)
+                p.text(`Elapsed Time: ${((elapsedTime) / 1000).toFixed(2)}`, gridSpaceX*4, 12*5)
+                p.text(`Shuffles: ${(shuffles).toFixed(0)}`, gridSpaceX*18, 12*2)
 
 
 
@@ -397,7 +384,7 @@ let sketch = (p) => {
                 someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * ranTime) + minTime)
                 tempcol = "#" + makeHexString(6)
 
-                // const objectToSend = micarta.objs[Math.floor(Math.random() * micarta.objs.length)]
+
                 for (let index = 0; index < 6; index++) {
                     if (cartaopuesta.imgs.length > 5) {
                         cartaopuesta.imgs = []
@@ -483,18 +470,18 @@ let sketch = (p) => {
             }
         }
         if (p.key === 'm') {
-            // if (gameStatus === `playing`) {
-            // 	for (let index = 0; index < 6; index++) {
-            // 		if (micarta.imgs.length > 5) {
-            // 			micarta.imgs = []
-            // 			micarta.data = []
 
-            // 		}
-            // 		let rn = Math.floor(Math.random() * bufferDeckImgs.length)
-            // 		micarta.imgs.push(bufferDeckImgs[rn])
-            // 		micarta.data.push(bufferDeckData[rn])
-            // 	}
-            // }
+
+
+
+
+
+
+
+
+
+
+
         }
         if (p.key === 'B') {
 
@@ -572,7 +559,7 @@ let sketch = (p) => {
         if (gameStatus === `playing`) {
             for (let idx = 0; idx < micarta.imgs.length; idx++) {
                 if (await micarta.checkPressed(p, idx)) {
-                    // console.log(`pressed ${idx}`)
+
                     draw_allowed = true;
                     imgDragged = idx
                     t1 = p.map(p.mouseX - (micarta.locationsX[idx] - micarta.imgs[idx].width / 2), 0, micarta.imgs[idx].width, -micarta.imgs[idx].width / 2, micarta.imgs[idx].width / 2)
@@ -595,14 +582,14 @@ let sketch = (p) => {
                 p.background(10, 10, 10, 251)
                 if (thisImgData.id === cartaopuesta.data[idx].id && !verifyWon) {
                     verifyWon = true
-                    // console.log(`Incredible, you found a match! it took you ${elapsedTime} ms to complete`)
+
                     elapsedTimesRegistered.push(elapsedTime)
                     scores.push((difficulty * 10) + ((500 / Math.floor(elapsedTime)) * 100) - (shuffles))
-                    // console.log(`DEBUG::::::difficulty points = ${difficulty * 10}`)
-                    // console.log(`DEBUG::::::elapsedTime points = ${((500 / Math.floor(elapsedTime)) * 100)}`)
-                    // console.log(`DEBUG::::::minus shuffles points = ${(shuffles)}`)
-                    // console.log(`DEBUG::::::Last score points = ${scores[scores.length - 1]}`)
-                    // console.log(`DEBUG::::::Total score points = ${scores.reduce((partialSum, a) => partialSum + a, 0)}`)
+
+
+
+
+
 
 
                     micarta.locationsX[imgDragged] = cartaopuesta.locationsX[idx]
@@ -618,25 +605,25 @@ let sketch = (p) => {
                     if (minTime < 4.0) {
                         minTime = 4.0
                     }
-                    // console.log(`ranTime: ${ranTime} minTime: ${minTime}`)
+
                     p.background(10, 10, 10, 251)
                     imgDragged = undefined
 
                 } else if (!verifyWon) {
-                    // micarta.locationsX[imgDragged] = micarta.imgs[imgDragged].width / 2 + p.width / 8 + ((p.width / 4) * (imgDragged % 3)) + micarta.x;
-                    // if (imgDragged < 3) {
-                    //     micarta.locationsY[imgDragged] = (micarta.imgs[imgDragged].height / 2) + ((p.height / 4) * (0)) + micarta.y;
-                    // } else {
-                    //     micarta.locationsY[imgDragged] = (micarta.imgs[imgDragged].height / 2) + ((p.height / 4) * (1)) + micarta.y;
-                    // }
-                    micarta.initCardsLocations(p)
-                    imgDragged === undefined
-                } 
 
-            } else {
+
+
+
+
+
                     micarta.initCardsLocations(p)
                     imgDragged === undefined
                 }
+
+            } else {
+                micarta.initCardsLocations(p)
+                imgDragged === undefined
+            }
         }
     }
 
