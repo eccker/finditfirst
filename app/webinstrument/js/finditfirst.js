@@ -140,7 +140,7 @@ let sketch = (p) => {
     p.preload = () => {
         gridSpaceX = p.windowWidth / 32
         gridSpaceY = p.windowHeight / 32
-
+        
 
     }
 
@@ -156,13 +156,18 @@ let sketch = (p) => {
         draw_allowed = true;
         const _URL = window.location.search
         // console.log(`URL is: ${_URL}`);
-        p.textSize(24);
 
         const urlParams = new URLSearchParams(_URL);
         // console.log('channel urlParams is: ' + urlParams.get('channel'))
         channel = urlParams.get('channel') ? urlParams.get('channel') : `channel000`
         // console.log(`channel is: ${channel}`)
-
+        if (p.windowWidth > p.windowHeight) {
+            // 'landscape';
+            p.textSize(24)
+        } else {
+            // 'portrait';
+            p.textSize(12)
+        }
 
         socket = io({
             transports: ['websocket']
@@ -185,10 +190,10 @@ let sketch = (p) => {
 
                     if (p.windowWidth > p.windowHeight) {
                         // 'landscape';
-                        bufferDeckImgs.push(cropAndResizeImage(_img, gridSpaceX*6, gridSpaceY*4))
+                        bufferDeckImgs.push(cropAndResizeImage(_img, gridSpaceX*6, gridSpaceY*6))
                     } else {
                         // 'portrait';
-                        bufferDeckImgs.push(cropAndResizeImage(_img, gridSpaceX*4, gridSpaceY*6))
+                        bufferDeckImgs.push(cropAndResizeImage(_img, gridSpaceX*6, gridSpaceY*6))
                     }
 
                     bufferDeckData.push(data)
@@ -198,10 +203,10 @@ let sketch = (p) => {
 
         
         elapsedTimesRegistered[0] = 0
-        cartaopuesta = new card(gridSpaceX, gridSpaceY*3)
+        cartaopuesta = new card(gridSpaceX*3, gridSpaceY*3)
         cartaopuesta.initCards(p,cropAndResizeImage)
         
-        micarta = new card(gridSpaceX, gridSpaceY*16)
+        micarta = new card(gridSpaceX*3, gridSpaceY*18)
         micarta.initCards(p,cropAndResizeImage)
         
         difficulty = 2
@@ -374,9 +379,9 @@ let sketch = (p) => {
             if (elapsedTime < someHeartBeatPeriod) {
                 p.fill(tempcol)
                 p.noStroke()
-                p.rect(0, 0, p.width / 8, altura)
+                p.rect(0, 0, gridSpaceX*3, altura)
                 p.fill(200, 200, 200)
-                p.textSize(24);
+                // p.textSize(24);
                 p.text(`Time Left: ${((someHeartBeatPeriod - elapsedTime) / 1000).toFixed(2)}`, p.width / 8, p.height / 32)
                 p.text(`Min Time: ${(minTime).toFixed(2)}`, 8 * p.width / 32, p.height / 32)
                 p.text(`Max Time: ${(ranTime + minTime).toFixed(2)}`, 12 * p.width / 32, p.height / 32)

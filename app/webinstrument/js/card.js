@@ -100,7 +100,16 @@ class card {
             p.loadImage(this.baseData.urls.thumb, _img => {
                 let gridSpaceX = p.windowWidth / 32
                 let gridSpaceY = p.windowHeight / 32
-                let processedImage = cropAndResizeImage(_img, gridSpaceX * 4, gridSpaceY * 6)
+                let processedImage
+
+                if (p.windowWidth > p.windowHeight) {
+                    // 'landscape';
+                    processedImage = cropAndResizeImage(_img, gridSpaceX * 6, gridSpaceY * 6)
+                } else {
+                    // 'portrait';
+                    processedImage = cropAndResizeImage(_img, gridSpaceX * 6, gridSpaceY * 6)
+
+                }
                 this.imgs.push(processedImage)
                 this.data.push(this.baseData)
 
