@@ -415,6 +415,21 @@ let sketch = (p) => {
         }
     }
 
+    p.doubleClicked = () => {
+        if (gameStatus === `lose`) {
+            gameStatus = `ready`
+            difficulty = 2
+            minTime = 12.0
+            ranTime = 68.0
+            shuffles = 0
+            elapsedTimesRegistered = []
+            elapsedTimesRegistered[0] = 0
+            scores = []
+            scores[0] = 0
+            lifes = 3
+        }
+      }
+
     p.keyReleased = async () => {
         if (p.key === 'T') {
             html2canvas(document.body)
