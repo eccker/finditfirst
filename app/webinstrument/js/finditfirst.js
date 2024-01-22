@@ -40,6 +40,8 @@ let sketch = (p) => {
     let gridSpaceX
     let gridSpaceY
 
+    let textSize
+
 
     let makeHexString = (length = 6) => {
         let result = ''
@@ -162,11 +164,11 @@ let sketch = (p) => {
         channel = urlParams.get('channel') ? urlParams.get('channel') : `channel000`
 
         if (p.windowWidth > p.windowHeight) {
-
-            p.textSize(24)
+            textSize = 24
+            p.textSize(textSize)
         } else {
-
-            p.textSize(12)
+            textSize = 12
+            p.textSize(textSize)
         }
 
         socket = io({
@@ -272,19 +274,17 @@ let sketch = (p) => {
         if (gameStatus === `won`) {
             p.fill(200, 200, 200)
 
-            p.text(`Time Left: ${((someHeartBeatPeriod - elapsedTime) / 1000).toFixed(2)}`, gridSpaceX*4, 12)
-            p.text(`Min Time: ${(minTime).toFixed(2)}`, gridSpaceX*4, 12*2)
-            p.text(`Max Time: ${(ranTime + minTime).toFixed(2)}`, gridSpaceX*4, 12*3)
-            p.text(`Current Time: ${((someHeartBeatPeriod) / 1000).toFixed(2)}`, gridSpaceX*4, 12*4)
-            p.text(`Elapsed Time: ${((elapsedTime) / 1000).toFixed(2)}`, gridSpaceX*4, 12*5)
-            
+            p.text(`Time Left: ${((someHeartBeatPeriod - elapsedTime) / 1000).toFixed(2)}`, gridSpaceX*4, textSize)
+            p.text(`Min Time: ${(minTime).toFixed(2)}`, gridSpaceX*4, textSize*2)
+            p.text(`Max Time: ${(ranTime + minTime).toFixed(2)}`, gridSpaceX*4, textSize*3)
+            p.text(`Current Time: ${((someHeartBeatPeriod) / 1000).toFixed(2)}`, gridSpaceX*4, textSize*4)
+            p.text(`Elapsed Time: ${((elapsedTime) / 1000).toFixed(2)}`, gridSpaceX*4, textSize*5)
             
             p.fill(0, 200, 15);
             
-            p.text(`Took you: ${((elapsedTime) / 1000).toFixed(2)}`, gridSpaceX*18, 12*3)
+            p.text(`Took you: ${((elapsedTime) / 1000).toFixed(2)}`, gridSpaceX*18, textSize*3)
             p.fill(200, 20, 20)
-            p.text(`Shuffles: ${(shuffles).toFixed(0)}`, gridSpaceX*18, 12*2)
-            
+            p.text(`Shuffles: ${(shuffles).toFixed(0)}`, gridSpaceX*18, textSize*2)
 
             p.fill(0, 200, 15);
 
@@ -301,10 +301,10 @@ let sketch = (p) => {
             p.text(`Erned Points: ${(scores[scores.length - 1]).toFixed(4)}`, gridSpaceX * 7, gridSpaceY * 10, gridSpaceX*18, gridSpaceY*6)
             p.fill(0, 200, 15);
 
-            p.text(`Difficulty Points: ${((difficulty - 1) * 10).toFixed(4)}`, gridSpaceX * 7, gridSpaceY * 11, gridSpaceX*18, gridSpaceY*6)
-            p.text(`Time Points: ${((500 / Math.floor(elapsedTime)) * 100).toFixed(4)}`, gridSpaceX * 7, gridSpaceY * 12, gridSpaceX*18, gridSpaceY*6)
+            p.text(`Difficulty Points: ${((difficulty - 1) * 10).toFixed(4)}`, gridSpaceX * 7, gridSpaceY * 10 + textSize, gridSpaceX*18, gridSpaceY*6)
+            p.text(`Time Points: ${((500 / Math.floor(elapsedTime)) * 100).toFixed(4)}`, gridSpaceX * 7, gridSpaceY * 10 + 2 * textSize, gridSpaceX*18, gridSpaceY*6)
             p.fill(200, 20, 15);
-            p.text(`Shuffles Penalties: ${shuffles.toFixed(0)}`, gridSpaceX * 7, gridSpaceY * 13, gridSpaceX*18, gridSpaceY*6)
+            p.text(`Shuffles Penalties: ${shuffles.toFixed(0)}`, gridSpaceX * 7, gridSpaceY * 10 + 3 * textSize, gridSpaceX*18, gridSpaceY*6)
 
 
 
@@ -368,12 +368,12 @@ let sketch = (p) => {
                 p.rect(0, 0, gridSpaceX * 3, altura)
                 p.fill(200, 200, 200)
 
-                p.text(`Time Left: ${((someHeartBeatPeriod - elapsedTime) / 1000).toFixed(2)}`, gridSpaceX*4, 12)
-                p.text(`Min Time: ${(minTime).toFixed(2)}`, gridSpaceX*4, 12*2)
-                p.text(`Max Time: ${(ranTime + minTime).toFixed(2)}`, gridSpaceX*4, 12*3)
-                p.text(`Current Time: ${((someHeartBeatPeriod) / 1000).toFixed(2)}`, gridSpaceX*4, 12*4)
-                p.text(`Elapsed Time: ${((elapsedTime) / 1000).toFixed(2)}`, gridSpaceX*4, 12*5)
-                p.text(`Shuffles: ${(shuffles).toFixed(0)}`, gridSpaceX*18, 12*2)
+                p.text(`Time Left: ${((someHeartBeatPeriod - elapsedTime) / 1000).toFixed(2)}`, gridSpaceX*4, textSize)
+                p.text(`Min Time: ${(minTime).toFixed(2)}`, gridSpaceX*4, textSize*2)
+                p.text(`Max Time: ${(ranTime + minTime).toFixed(2)}`, gridSpaceX*4, textSize*3)
+                p.text(`Current Time: ${((someHeartBeatPeriod) / 1000).toFixed(2)}`, gridSpaceX*4, textSize*4)
+                p.text(`Elapsed Time: ${((elapsedTime) / 1000).toFixed(2)}`, gridSpaceX*4, textSize*5)
+                p.text(`Shuffles: ${(shuffles).toFixed(0)}`, gridSpaceX*18, textSize*2)
 
 
 
