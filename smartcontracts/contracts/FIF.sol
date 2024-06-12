@@ -47,8 +47,19 @@ contract FIF is EIP712, AccessControl {
         bytes signature;
     }
 
+    uint256 public priceToPlay;
+
+    function setPriceToPlay(uint256 price) external onlyRole(MINTER_ROLE) {
+        priceToPlay = price;
+    }
+
     // Los jugadores transfieren tokens al contrato para jugar
     function transferirTokens(uint256 amount) external {
+        require(
+            amount % priceToPlay == 0,
+            "Must send a multiple of the token price to play"
+        );
+
         require(
             token.transferFrom(msg.sender, address(this), amount),
             "Error en la transferencia"
@@ -58,10 +69,12 @@ contract FIF is EIP712, AccessControl {
         emit TransferTokens(msg.sender, amount);
     }
 
+    // createRoom
+    // joinRoom
+    
     /// @notice Redeems an WinnerVoucher for an actual reward.
     /// @param voucher A signed WinnerVoucher that describes the Reward to be redeemed.
-    function redeem( WinnerVoucher calldata voucher
-    ) public {
+    function redeem(WinnerVoucher calldata voucher) public {
         // make sure signature is valid and get the address of the signer
         address signer = _verify(voucher);
 
@@ -71,10 +84,7 @@ contract FIF is EIP712, AccessControl {
             "Signature invalid or unauthorized"
         );
 
-        require(
-            vouchers[voucher.voucherId] != true,
-            "Voucher spent"
-        );
+        require(vouchers[voucher.voucherId] != true, "Voucher spent");
 
         require(
             voucher.winnerBet + voucher.loserBet == voucher.winnerReward,
@@ -82,26 +92,33 @@ contract FIF is EIP712, AccessControl {
         );
 
         require(
-            balances[stringToAddress(voucher.winnerAddress)] >= voucher.winnerBet && balances[stringToAddress(voucher.loserAddress)] >= voucher.loserBet, 
-            "Balances and Bets not matching" 
+            balances[stringToAddress(voucher.winnerAddress)] >=
+                voucher.winnerBet &&
+                balances[stringToAddress(voucher.loserAddress)] >=
+                voucher.loserBet,
+            "Balances and Bets not matching"
         );
 
         vouchers[voucher.voucherId] = true;
 
         balances[stringToAddress(voucher.winnerAddress)] -= voucher.winnerBet;
         balances[stringToAddress(voucher.loserAddress)] -= voucher.loserBet;
-        if(balances[stringToAddress(voucher.loserAddress)] == 0) {
+        if (balances[stringToAddress(voucher.loserAddress)] == 0) {
             canPlay[stringToAddress(voucher.loserAddress)] = false;
         }
-        if(balances[stringToAddress(voucher.winnerAddress)] == 0){
-        canPlay[stringToAddress(voucher.winnerAddress)] = false;
+        if (balances[stringToAddress(voucher.winnerAddress)] == 0) {
+            canPlay[stringToAddress(voucher.winnerAddress)] = false;
         }
 
         // TODO partition the Reward to cover FIF fee
-        uint256 _amountOfFIFCoinForAuthor       = (( 2128623629 * 10**9) * voucher.winnerReward) / 10**20; //  2.128623629 % BMMM3SC Author
-        uint256 _amountOfFIFCoinForTreasury     = (( 2461179748 * 10**9) * voucher.winnerReward) / 10**20; //  2.461179748 % BMMM3SC Treasury
-        uint256 _amountOfFIFCoinForWinner       = ((91803398874 * 10**9) * voucher.winnerReward) / 10**20; // 91.803398874 % BMMM3SC Sender
-        uint256 _amountOfFIFCoinForDAO          = (( 3606797749 * 10**9) * voucher.winnerReward) / 10**20; //  3.606797749 % BMMM3SC DAO
+        uint256 _amountOfFIFCoinForAuthor = ((2128623629 * 10 ** 9) *
+            voucher.winnerReward) / 10 ** 20; //  2.128623629 % BMMM3SC Author
+        uint256 _amountOfFIFCoinForTreasury = ((2461179748 * 10 ** 9) *
+            voucher.winnerReward) / 10 ** 20; //  2.461179748 % BMMM3SC Treasury
+        uint256 _amountOfFIFCoinForWinner = ((91803398874 * 10 ** 9) *
+            voucher.winnerReward) / 10 ** 20; // 91.803398874 % BMMM3SC Sender
+        uint256 _amountOfFIFCoinForDAO = ((3606797749 * 10 ** 9) *
+            voucher.winnerReward) / 10 ** 20; //  3.606797749 % BMMM3SC DAO
 
         token.approve(authorAddress, _amountOfFIFCoinForAuthor);
         token.transfer(authorAddress, _amountOfFIFCoinForAuthor);
@@ -112,44 +129,61 @@ contract FIF is EIP712, AccessControl {
         token.approve(DAOAddress, _amountOfFIFCoinForDAO);
         token.transfer(DAOAddress, _amountOfFIFCoinForDAO);
 
-        token.approve(stringToAddress(voucher.winnerAddress), _amountOfFIFCoinForWinner);
-        token.transfer(address(stringToAddress(voucher.winnerAddress)), _amountOfFIFCoinForWinner);
-        emit RewardRedeemed(stringToAddress(voucher.winnerAddress), _amountOfFIFCoinForWinner);
+        token.approve(
+            stringToAddress(voucher.winnerAddress),
+            _amountOfFIFCoinForWinner
+        );
+        token.transfer(
+            address(stringToAddress(voucher.winnerAddress)),
+            _amountOfFIFCoinForWinner
+        );
+        emit RewardRedeemed(
+            stringToAddress(voucher.winnerAddress),
+            _amountOfFIFCoinForWinner
+        );
     }
 
-     function stringToAddress(string calldata s) public pure  returns (address) {
+    function stringToAddress(string calldata s) public pure returns (address) {
         bytes memory _bytes = hexStringToAddress(s);
         require(_bytes.length >= 1 + 20, "toAddress_outOfBounds");
         address tempAddress;
 
         assembly {
-            tempAddress := div(mload(add(add(_bytes, 0x20), 1)), 0x1000000000000000000000000)
+            tempAddress := div(
+                mload(add(add(_bytes, 0x20), 1)),
+                0x1000000000000000000000000
+            )
         }
 
         return tempAddress;
     }
-     function hexStringToAddress(string calldata s) public pure  returns (bytes memory) {
+
+    function hexStringToAddress(
+        string calldata s
+    ) public pure returns (bytes memory) {
         bytes memory ss = bytes(s);
-        require(ss.length%2 == 0); // length must be even
-        bytes memory r = new bytes(ss.length/2);
-        for (uint i=0; i<ss.length/2; ++i) {
-            r[i] = bytes1(fromHexChar(uint8(ss[2*i])) * 16 +
-                        fromHexChar(uint8(ss[2*i+1])));
+        require(ss.length % 2 == 0); // length must be even
+        bytes memory r = new bytes(ss.length / 2);
+        for (uint i = 0; i < ss.length / 2; ++i) {
+            r[i] = bytes1(
+                fromHexChar(uint8(ss[2 * i])) *
+                    16 +
+                    fromHexChar(uint8(ss[2 * i + 1]))
+            );
         }
 
         return r;
-
     }
 
-     function fromHexChar(uint8 c) public pure returns (uint8) {
-        if (bytes1(c) >= bytes1('0') && bytes1(c) <= bytes1('9')) {
-            return c - uint8(bytes1('0'));
+    function fromHexChar(uint8 c) public pure returns (uint8) {
+        if (bytes1(c) >= bytes1("0") && bytes1(c) <= bytes1("9")) {
+            return c - uint8(bytes1("0"));
         }
-        if (bytes1(c) >= bytes1('a') && bytes1(c) <= bytes1('f')) {
-            return 10 + c - uint8(bytes1('a'));
+        if (bytes1(c) >= bytes1("a") && bytes1(c) <= bytes1("f")) {
+            return 10 + c - uint8(bytes1("a"));
         }
-        if (bytes1(c) >= bytes1('A') && bytes1(c) <= bytes1('F')) {
-            return 10 + c - uint8(bytes1('A'));
+        if (bytes1(c) >= bytes1("A") && bytes1(c) <= bytes1("F")) {
+            return 10 + c - uint8(bytes1("A"));
         }
         return 0;
     }
@@ -200,15 +234,7 @@ contract FIF is EIP712, AccessControl {
 
     function supportsInterface(
         bytes4 interfaceId
-    )
-        public
-        view
-        virtual
-        override(AccessControl)
-        returns (bool)
-    {
-
-    return AccessControl.supportsInterface(interfaceId);
-
+    ) public view virtual override(AccessControl) returns (bool) {
+        return AccessControl.supportsInterface(interfaceId);
     }
 }

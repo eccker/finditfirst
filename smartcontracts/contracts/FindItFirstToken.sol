@@ -60,8 +60,8 @@ contract FindItFirstToken is
         paymentToken = IERC20(_tokenAddress);
     }
 
-    function setMinAmountToMint(uint256 price) external onlyRole(MINTER_ROLE) {
-        minAmountToMint = price;
+    function setMinAmountToMint(uint256 amount) external onlyRole(MINTER_ROLE) {
+        minAmountToMint = amount;
     }
 
     // user must approve "amount" to this contract before executing this function
