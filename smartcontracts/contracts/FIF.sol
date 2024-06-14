@@ -47,7 +47,7 @@ contract FIF is EIP712, AccessControl {
         bytes signature;
     }
 
-    uint256 public priceToPlay;
+    uint256 public priceToPlay = 1 ether;
 
     function setPriceToPlay(uint256 price) external onlyRole(MINTER_ROLE) {
         priceToPlay = price;
