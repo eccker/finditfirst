@@ -199,7 +199,7 @@ let loadAfterOnload = async () => {
                         }
                     })
                 }
-            })
+            }) 
         } else {
             let userJWT = window.localStorage.getItem('userJWT')
             hashedpassword = window.localStorage.getItem('hashedpassword')

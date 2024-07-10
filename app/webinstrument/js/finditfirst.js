@@ -13,8 +13,8 @@ let sketch = (p) => {
     let ranTime = 68.0
     let bleedRate = 0.16
 
-    let micarta
-    let cartaopuesta
+    let topDeck
+    let bottomDeck
     let bufferDeckData = []
     let bufferDeckImgs = []
 
@@ -72,8 +72,7 @@ let sketch = (p) => {
         socket.emit(`server`, signedCommands + `;` + currentJWT)
     }
 
-
-    let encodeSendJWTData = (_dataToSend) => {
+    let encodeSendJWTData = (_dataToSend, _channel) => {
 
         let currentJWT = window.localStorage.getItem('userJWT')
         let oHeader = {
@@ -84,7 +83,7 @@ let sketch = (p) => {
         let oPayload = {
             "user": {
                 "data": _dataToSend,
-                "channel": channel
+                "channel": _channel
             }
         }
         let sHeader = JSON.stringify(oHeader)
@@ -93,7 +92,7 @@ let sketch = (p) => {
         socket.emit(`server`, signedCommands + `;` + currentJWT)
     }
 
-    let encodeSendJWTRequestBuffer = (buffLength = 16) => {
+    let encodeSendJWTRequestBuffer = (buffLength = 16, _channel) => {
 
         let currentJWT = window.localStorage.getItem('userJWT')
         let oHeader = {
@@ -104,7 +103,7 @@ let sketch = (p) => {
         let oPayload = {
             "user": {
                 "buffer": buffLength,
-                "channel": channel,
+                "channel": _channel,
             }
         }
         let sHeader = JSON.stringify(oHeader)
@@ -142,8 +141,6 @@ let sketch = (p) => {
     p.preload = () => {
         gridSpaceX = p.windowWidth / 32
         gridSpaceY = p.windowHeight / 32
-
-
     }
 
     p.setup = () => {
@@ -204,14 +201,14 @@ let sketch = (p) => {
         )
 
         elapsedTimesRegistered[0] = 0
-        cartaopuesta = new card(gridSpaceX * 3, gridSpaceY * 3)
-        cartaopuesta.initCards(p, cropAndResizeImage)
+        topDeck = new card(gridSpaceX * 3, gridSpaceY * 3)
+        topDeck.initCards(p, cropAndResizeImage)
 
-        micarta = new card(gridSpaceX * 3, gridSpaceY * 18)
-        micarta.initCards(p, cropAndResizeImage)
+        bottomDeck = new card(gridSpaceX * 3, gridSpaceY * 18)
+        bottomDeck.initCards(p, cropAndResizeImage)
 
         difficulty = 2
-        encodeSendJWTRequestBuffer(difficulty)
+        encodeSendJWTRequestBuffer(difficulty, channel)
 
         someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * ranTime) + minTime)
         draw_allowed = true;
@@ -224,21 +221,21 @@ let sketch = (p) => {
             if (gameStatus === `playing`) {
                 shuffles++
                 for (let index = 0; index < 6; index++) {
-                    if (cartaopuesta.imgs.length > 5) {
-                        cartaopuesta.imgs = []
-                        cartaopuesta.data = []
+                    if (topDeck.imgs.length > 5) {
+                        topDeck.imgs = []
+                        topDeck.data = []
                     }
                     let rn = Math.floor(Math.random() * bufferDeckImgs.length)
-                    cartaopuesta.imgs.push(bufferDeckImgs[rn])
-                    cartaopuesta.data.push(bufferDeckData[rn])
-                    if (micarta.imgs.length > 5) {
-                        micarta.imgs = []
-                        micarta.data = []
+                    topDeck.imgs.push(bufferDeckImgs[rn])
+                    topDeck.data.push(bufferDeckData[rn])
+                    if (bottomDeck.imgs.length > 5) {
+                        bottomDeck.imgs = []
+                        bottomDeck.data = []
 
                     }
                     rn = Math.floor(Math.random() * bufferDeckImgs.length)
-                    micarta.imgs.push(bufferDeckImgs[rn])
-                    micarta.data.push(bufferDeckData[rn])
+                    bottomDeck.imgs.push(bufferDeckImgs[rn])
+                    bottomDeck.data.push(bufferDeckData[rn])
                 }
             }
         })
@@ -252,8 +249,8 @@ let sketch = (p) => {
 
         opDeckBtn.position(14 * p.width / 16, 7 * p.height / 16);
         opDeckBtn.style('position', 'fixed')
-        micarta.initCardsLocations(p)
-        cartaopuesta.initCardsLocations(p)
+        bottomDeck.initCardsLocations(p)
+        topDeck.initCardsLocations(p)
 
         p.background(10, 10, 10, 251)
     }
@@ -274,7 +271,7 @@ let sketch = (p) => {
         if (gameStatus === `won`) {
             p.fill(200, 200, 200)
 
-            p.text(`Time Left: ${((someHeartBeatPeriod - elapsedTime) / 1000).toFixed(2)}`, gridSpaceX*4, textSize)
+            p.text(`Time Left: ${((someHeartBeatPeriod - elapsedTime) / 1000).toFixed(2)}`, gridSpaceX*4, textSize*6)
             p.text(`Min Time: ${(minTime).toFixed(2)}`, gridSpaceX*4, textSize*2)
             p.text(`Max Time: ${(ranTime + minTime).toFixed(2)}`, gridSpaceX*4, textSize*3)
             p.text(`Current Time: ${((someHeartBeatPeriod) / 1000).toFixed(2)}`, gridSpaceX*4, textSize*4)
@@ -301,10 +298,10 @@ let sketch = (p) => {
             p.text(`Erned Points: ${(scores[scores.length - 1]).toFixed(4)}`, gridSpaceX * 7, gridSpaceY * 10, gridSpaceX*18, gridSpaceY*6)
             p.fill(0, 200, 15);
 
-            p.text(`Difficulty Points: ${((difficulty - 1) * 10).toFixed(4)}`, gridSpaceX * 7, gridSpaceY * 10 + textSize, gridSpaceX*18, gridSpaceY*6)
-            p.text(`Time Points: ${((500 / Math.floor(elapsedTime)) * 100).toFixed(4)}`, gridSpaceX * 7, gridSpaceY * 10 + 2 * textSize, gridSpaceX*18, gridSpaceY*6)
+            p.text(`Difficulty Points: ${((difficulty - 1) * 1000).toFixed(4)}`, gridSpaceX * 7, gridSpaceY * 10 + textSize, gridSpaceX*18, gridSpaceY*6)
+            p.text(`Time Points: ${((1000 / Math.floor(elapsedTime)*1000) ).toFixed(4)}`, gridSpaceX * 7, gridSpaceY * 10 + 2 * textSize, gridSpaceX*18, gridSpaceY*6)
             p.fill(200, 20, 15);
-            p.text(`Shuffles Penalties: ${shuffles.toFixed(0)}`, gridSpaceX * 7, gridSpaceY * 10 + 3 * textSize, gridSpaceX*18, gridSpaceY*6)
+            p.text(`Shuffles Penalties: ${shuffles.toFixed(0)*10}`, gridSpaceX * 7, gridSpaceY * 10 + 3 * textSize, gridSpaceX*18, gridSpaceY*6)
 
 
 
@@ -328,7 +325,7 @@ let sketch = (p) => {
             p.fill(200, 20, 15);
 
 
-            p.text(`Time expired, you spent a ticket. Now you have ${lifes} tickets. Press [space] to continue the Game`, gridSpaceX * 7, gridSpaceY * 17, gridSpaceX*18, gridSpaceY*6)
+            p.text(`Time expired, you spent a life. Now you have ${lifes} lifes. Press [space] to continue the Game`, gridSpaceX * 7, gridSpaceY * 17, gridSpaceX*18, gridSpaceY*6)
 
             p.text(`Last time: ${((elapsedTimesRegistered[elapsedTimesRegistered.length - 1]) / 1000).toFixed(2)}`, gridSpaceX*25, gridSpaceY*3)
             p.text(`Difficulty: ${difficulty-1}`, gridSpaceX*25, gridSpaceY*5)
@@ -346,12 +343,12 @@ let sketch = (p) => {
 
             if (draw_allowed) {
                 if (draw_1) {
-                    micarta.locationsX[imgDragged] = p.mouseX - t1;
-                    micarta.locationsY[imgDragged] = p.mouseY - t2;
+                    bottomDeck.locationsX[imgDragged] = p.mouseX - t1;
+                    bottomDeck.locationsY[imgDragged] = p.mouseY - t2;
                 }
             }
-            cartaopuesta.show(p)
-            micarta.show(p)
+            topDeck.show(p)
+            bottomDeck.show(p)
             p.fill(0, 200, 15);
             p.text(`Last time: ${((elapsedTimesRegistered[elapsedTimesRegistered.length - 1]) / 1000).toFixed(2)}`, gridSpaceX*25, gridSpaceY*3)
             p.text(`Difficulty: ${difficulty}`, gridSpaceX*25, gridSpaceY*5)
@@ -368,11 +365,11 @@ let sketch = (p) => {
                 p.rect(0, 0, gridSpaceX * 3, altura)
                 p.fill(200, 200, 200)
 
-                p.text(`Time Left: ${((someHeartBeatPeriod - elapsedTime) / 1000).toFixed(2)}`, gridSpaceX*4, textSize)
                 p.text(`Min Time: ${(minTime).toFixed(2)}`, gridSpaceX*4, textSize*2)
                 p.text(`Max Time: ${(ranTime + minTime).toFixed(2)}`, gridSpaceX*4, textSize*3)
                 p.text(`Current Time: ${((someHeartBeatPeriod) / 1000).toFixed(2)}`, gridSpaceX*4, textSize*4)
                 p.text(`Elapsed Time: ${((elapsedTime) / 1000).toFixed(2)}`, gridSpaceX*4, textSize*5)
+                p.text(`Time Left: ${((someHeartBeatPeriod - elapsedTime) / 1000).toFixed(2)}`, gridSpaceX*4, textSize*6)
                 p.text(`Shuffles: ${(shuffles).toFixed(0)}`, gridSpaceX*18, textSize*2)
 
 
@@ -386,27 +383,27 @@ let sketch = (p) => {
 
 
                 for (let index = 0; index < 6; index++) {
-                    if (cartaopuesta.imgs.length > 5) {
-                        cartaopuesta.imgs = []
-                        cartaopuesta.data = []
-                        micarta.imgs = []
-                        micarta.data = []
+                    if (topDeck.imgs.length > 5) {
+                        topDeck.imgs = []
+                        topDeck.data = []
+                        bottomDeck.imgs = []
+                        bottomDeck.data = []
 
                     }
 
                     let rn = Math.floor(Math.random() * bufferDeckImgs.length)
-                    micarta.imgs.push(bufferDeckImgs[rn])
-                    micarta.data.push(bufferDeckData[rn])
+                    bottomDeck.imgs.push(bufferDeckImgs[rn])
+                    bottomDeck.data.push(bufferDeckData[rn])
                     rn = Math.floor(Math.random() * bufferDeckImgs.length)
-                    cartaopuesta.imgs.push(bufferDeckImgs[rn])
-                    cartaopuesta.data.push(bufferDeckData[rn])
+                    topDeck.imgs.push(bufferDeckImgs[rn])
+                    topDeck.data.push(bufferDeckData[rn])
                 }
                 lifes = lifes - 1
                 gameStatus = `expired`
                 shuffles = 0
                 if (lifes == 0) {
                     gameStatus = `lose`
-                    encodeSendJWTRequestBuffer(difficulty)
+                    encodeSendJWTRequestBuffer(difficulty, channel)
                 }
 
 
@@ -428,7 +425,7 @@ let sketch = (p) => {
             scores[0] = 0
             lifes = 3
         }
-      }
+    }
 
     p.keyReleased = async () => {
         if (p.key === 'T') {
@@ -465,22 +462,22 @@ let sketch = (p) => {
             if (gameStatus === `playing`) {
                 shuffles++
                 for (let index = 0; index < 6; index++) {
-                    if (cartaopuesta.imgs.length > 5) {
-                        cartaopuesta.imgs = []
-                        cartaopuesta.data = []
+                    if (topDeck.imgs.length > 5) {
+                        topDeck.imgs = []
+                        topDeck.data = []
                     }
                     let rn = Math.floor(Math.random() * bufferDeckImgs.length)
-                    cartaopuesta.imgs.push(bufferDeckImgs[rn])
-                    cartaopuesta.data.push(bufferDeckData[rn])
+                    topDeck.imgs.push(bufferDeckImgs[rn])
+                    topDeck.data.push(bufferDeckData[rn])
 
-                    if (micarta.imgs.length > 5) {
-                        micarta.imgs = []
-                        micarta.data = []
+                    if (bottomDeck.imgs.length > 5) {
+                        bottomDeck.imgs = []
+                        bottomDeck.data = []
 
                     }
                     let rn2 = Math.floor(Math.random() * bufferDeckImgs.length)
-                    micarta.imgs.push(bufferDeckImgs[rn2])
-                    micarta.data.push(bufferDeckData[rn2])
+                    bottomDeck.imgs.push(bufferDeckImgs[rn2])
+                    bottomDeck.data.push(bufferDeckData[rn2])
                 }
             }
         }
@@ -512,7 +509,7 @@ let sketch = (p) => {
         if (p.key === ' ') {
             if (gameStatus === `ready` || gameStatus === `won` || gameStatus === `expired`) {
                 shuffles = 0
-                micarta.initCardsLocations(p)
+                bottomDeck.initCardsLocations(p)
                 gameStatus = `playing`
 
                 elapsedTime = 0
@@ -521,30 +518,31 @@ let sketch = (p) => {
                 tempcol = "#" + makeHexString(6)
 
                 for (let index = 0; index < 6; index++) {
-                    if (cartaopuesta.imgs.length > 5) {
-                        cartaopuesta.imgs = []
-                        cartaopuesta.data = []
-                        micarta.imgs = []
-                        micarta.data = []
+                    if (topDeck.imgs.length > 5) {
+                        topDeck.imgs = []
+                        topDeck.data = []
+                        bottomDeck.imgs = []
+                        bottomDeck.data = []
 
                     }
 
                     let rn = Math.floor(Math.random() * bufferDeckImgs.length)
-                    micarta.imgs.push(bufferDeckImgs[rn])
-                    micarta.data.push(bufferDeckData[rn])
+                    bottomDeck.imgs.push(bufferDeckImgs[rn])
+                    bottomDeck.data.push(bufferDeckData[rn])
 
                     rn = Math.floor(Math.random() * bufferDeckImgs.length)
-                    cartaopuesta.imgs.push(bufferDeckImgs[rn])
-                    cartaopuesta.data.push(bufferDeckData[rn])
+                    topDeck.imgs.push(bufferDeckImgs[rn])
+                    topDeck.data.push(bufferDeckData[rn])
                 }
                 verifyWon = false
             }
         }
     }
+
     p.mousePressed = async () => {
         if (gameStatus === `ready` || gameStatus === `won` || gameStatus === `expired`) {
             shuffles = 0
-            micarta.initCardsLocations(p)
+            bottomDeck.initCardsLocations(p)
             gameStatus = `playing`
 
             elapsedTime = 0
@@ -553,32 +551,32 @@ let sketch = (p) => {
             tempcol = "#" + makeHexString(6)
 
             for (let index = 0; index < 6; index++) {
-                if (cartaopuesta.imgs.length > 5) {
-                    cartaopuesta.imgs = []
-                    cartaopuesta.data = []
-                    micarta.imgs = []
-                    micarta.data = []
+                if (topDeck.imgs.length > 5) {
+                    topDeck.imgs = []
+                    topDeck.data = []
+                    bottomDeck.imgs = []
+                    bottomDeck.data = []
 
                 }
 
                 let rn = Math.floor(Math.random() * bufferDeckImgs.length)
-                micarta.imgs.push(bufferDeckImgs[rn])
-                micarta.data.push(bufferDeckData[rn])
+                bottomDeck.imgs.push(bufferDeckImgs[rn])
+                bottomDeck.data.push(bufferDeckData[rn])
 
                 rn = Math.floor(Math.random() * bufferDeckImgs.length)
-                cartaopuesta.imgs.push(bufferDeckImgs[rn])
-                cartaopuesta.data.push(bufferDeckData[rn])
+                topDeck.imgs.push(bufferDeckImgs[rn])
+                topDeck.data.push(bufferDeckData[rn])
             }
             verifyWon = false
         }
         if (gameStatus === `playing`) {
-            for (let idx = 0; idx < micarta.imgs.length; idx++) {
-                if (await micarta.checkPressed(p, idx)) {
+            for (let idx = 0; idx < bottomDeck.imgs.length; idx++) {
+                if (await bottomDeck.checkPressed(p, idx)) {
 
                     draw_allowed = true;
                     imgDragged = idx
-                    t1 = p.map(p.mouseX - (micarta.locationsX[idx] - micarta.imgs[idx].width / 2), 0, micarta.imgs[idx].width, -micarta.imgs[idx].width / 2, micarta.imgs[idx].width / 2)
-                    t2 = p.map(p.mouseY - (micarta.locationsY[idx] - micarta.imgs[idx].height / 2), 0, micarta.imgs[idx].height, -micarta.imgs[idx].height / 2, micarta.imgs[idx].height / 2)
+                    t1 = p.map(p.mouseX - (bottomDeck.locationsX[idx] - bottomDeck.imgs[idx].width / 2), 0, bottomDeck.imgs[idx].width, -bottomDeck.imgs[idx].width / 2, bottomDeck.imgs[idx].width / 2)
+                    t2 = p.map(p.mouseY - (bottomDeck.locationsY[idx] - bottomDeck.imgs[idx].height / 2), 0, bottomDeck.imgs[idx].height, -bottomDeck.imgs[idx].height / 2, bottomDeck.imgs[idx].height / 2)
                     d1 = 0;
                 }
             }
@@ -588,30 +586,28 @@ let sketch = (p) => {
     p.mouseReleased = async () => {
         draw_allowed = false;
         draw_1 = false;
-        for (let idx = 0; idx < cartaopuesta.imgs.length; idx++) {
-            if (await micarta.checkOver(p, imgDragged, cartaopuesta, idx)) {
+        for (let idx = 0; idx < topDeck.imgs.length; idx++) {
+            if (await bottomDeck.checkOver(p, imgDragged, topDeck, idx)) {
                 if (imgDragged === undefined) return
                 console.log(`my card ${imgDragged} is over card ${idx}`)
-                let thisImgData = micarta.data[imgDragged]
+                let thisImgData = bottomDeck.data[imgDragged]
                 console.log(`It took you ${elapsedTime / 1000} s to complete`)
                 p.background(10, 10, 10, 251)
-                if (thisImgData.id === cartaopuesta.data[idx].id && !verifyWon) {
+                if (thisImgData.id === topDeck.data[idx].id && !verifyWon) {
                     verifyWon = true
 
                     elapsedTimesRegistered.push(elapsedTime)
-                    scores.push((difficulty * 10) + ((500 / Math.floor(elapsedTime)) * 100) - (shuffles))
 
+                    // Score = 1000 * difficulty + 100 * (1/time-to-match) - 10 * Number-of-shuffles
+                    const lastScore = (difficulty * 1000) + (1000 / Math.floor(elapsedTime))*1000 - (10 * shuffles)
+                    console.log("lastScore: ***** ", lastScore)
+                    scores.push(lastScore)
 
-
-
-
-
-
-                    micarta.locationsX[imgDragged] = cartaopuesta.locationsX[idx]
-                    micarta.locationsY[imgDragged] = cartaopuesta.locationsY[idx]
+                    bottomDeck.locationsX[imgDragged] = topDeck.locationsX[idx]
+                    bottomDeck.locationsY[imgDragged] = topDeck.locationsY[idx]
                     gameStatus = `won`
                     difficulty++
-                    encodeSendJWTRequestBuffer(difficulty)
+                    encodeSendJWTRequestBuffer(difficulty, channel)
                     ranTime -= 1
                     minTime -= bleedRate
                     if (ranTime < 12.0) {
@@ -625,18 +621,12 @@ let sketch = (p) => {
                     imgDragged = undefined
 
                 } else if (!verifyWon) {
-
-
-
-
-
-
-                    micarta.initCardsLocations(p)
+                    bottomDeck.initCardsLocations(p)
                     imgDragged === undefined
                 }
 
             } else {
-                micarta.initCardsLocations(p)
+                bottomDeck.initCardsLocations(p)
                 imgDragged === undefined
             }
         }
