@@ -22,21 +22,12 @@ contract FIF is EIP712, AccessControl {
     mapping(address => bool) public canPlay; // Indica si un jugador puede jugar porque ya pagó
 
     address public authorAddress = 0x090Ec11314d4BD31B536F52472d2E6A1D4771220;
-    address public treasuryAddress = 0x88c7CE98b4924c7eA58F160D3A128e0592ECB053;
-    address public DAOAddress = 0x2696b670D795e3B524880402C67b1ACCe6C1860f;
-
-    // mapping(address => uint256) pendingWithdrawals;
-    event TransferTokens(address indexed player, uint256 amount);
-    event RewardRedeemed(address indexed player, uint256 amount);
-
-    constructor(
-        address _tokenAddress
-    ) EIP712(SIGNING_DOMAIN, SIGNATURE_VERSION) {
-        _grantRole(MINTER_ROLE, msg.sender);
-        token = IERC20(_tokenAddress);
-    }
-
-    /// @notice Represents winner's reward, which has not yet been recorded into the blockchain. A signed voucher can be redeemed for tokens using the redeem function.
+    address public DAOTreasuryAddress = 0x88c7CE98b4924c7eA58F160D3A128e0592ECB053;
+    address public DAOFundAddress = 0x2696b670D795e3B524880402C67b1ACCe6C1860f;
+    address public DevelopersAddress = 0x2696b670D795e3B524880402C67b1ACCe6C1860f;
+    address public ArtistsAddress = 0x2696b670D795e3B524880402C67b1ACCe6C1860f;
+    uint256 public priceToPlay = 1 ether;
+    
     struct WinnerVoucher {
         uint256 voucherId;
         uint256 winnerReward;
@@ -47,13 +38,21 @@ contract FIF is EIP712, AccessControl {
         bytes signature;
     }
 
-    uint256 public priceToPlay = 1 ether;
+    event TransferTokens(address indexed player, uint256 amount);
+    event RewardRedeemed(address indexed player, uint256 amount);
+
+    constructor(
+        address _tokenAddress
+    ) EIP712(SIGNING_DOMAIN, SIGNATURE_VERSION) {
+        _grantRole(MINTER_ROLE, msg.sender);
+        token = IERC20(_tokenAddress);
+    }
+
 
     function setPriceToPlay(uint256 price) external onlyRole(MINTER_ROLE) {
         priceToPlay = price;
     }
 
-    // Los jugadores transfieren tokens al contrato para jugar
     function transferirTokens(uint256 amount) external {
         require(
             amount % priceToPlay == 0,
@@ -69,11 +68,6 @@ contract FIF is EIP712, AccessControl {
         emit TransferTokens(msg.sender, amount);
     }
 
-    // createRoom
-    // joinRoom
-    
-    /// @notice Redeems an WinnerVoucher for an actual reward.
-    /// @param voucher A signed WinnerVoucher that describes the Reward to be redeemed.
     function redeem(WinnerVoucher calldata voucher) public {
         // make sure signature is valid and get the address of the signer
         address signer = _verify(voucher);
@@ -111,36 +105,23 @@ contract FIF is EIP712, AccessControl {
         }
 
         // TODO partition the Reward to cover FIF fee
-        uint256 _amountOfFIFCoinForAuthor = ((2128623629 * 10 ** 9) *
-            voucher.winnerReward) / 10 ** 20; //  2.128623629 % BMMM3SC Author
-        uint256 _amountOfFIFCoinForTreasury = ((2461179748 * 10 ** 9) *
-            voucher.winnerReward) / 10 ** 20; //  2.461179748 % BMMM3SC Treasury
-        uint256 _amountOfFIFCoinForWinner = ((91803398874 * 10 ** 9) *
-            voucher.winnerReward) / 10 ** 20; // 91.803398874 % BMMM3SC Sender
-        uint256 _amountOfFIFCoinForDAO = ((3606797749 * 10 ** 9) *
-            voucher.winnerReward) / 10 ** 20; //  3.606797749 % BMMM3SC DAO
+        uint256 _amountOfFIFCoinForAuthor = ((2128623629 * 10 ** 9) * voucher.winnerReward) / 10 ** 20; //  2.128623629 % BMMM3SC Author
+        uint256 _amountOfFIFCoinForTreasury = ((2461179748 * 10 ** 9) * voucher.winnerReward) / 10 ** 20; //  2.461179748 % BMMM3SC Treasury
+        uint256 _amountOfFIFCoinForWinner = ((91803398874 * 10 ** 9) * voucher.winnerReward) / 10 ** 20; // 91.803398874 % BMMM3SC Sender
+        uint256 _amountOfFIFCoinForDAO = ((3606797749 * 10 ** 9) * voucher.winnerReward) / 10 ** 20; //  3.606797749 % BMMM3SC DAO
 
         token.approve(authorAddress, _amountOfFIFCoinForAuthor);
         token.transfer(authorAddress, _amountOfFIFCoinForAuthor);
 
-        token.approve(treasuryAddress, _amountOfFIFCoinForTreasury);
-        token.transfer(treasuryAddress, _amountOfFIFCoinForTreasury);
+        token.approve(DAOTreasuryAddress, _amountOfFIFCoinForTreasury);
+        token.transfer(DAOTreasuryAddress, _amountOfFIFCoinForTreasury);
 
-        token.approve(DAOAddress, _amountOfFIFCoinForDAO);
-        token.transfer(DAOAddress, _amountOfFIFCoinForDAO);
+        token.approve(DAOFundAddress, _amountOfFIFCoinForDAO);
+        token.transfer(DAOFundAddress, _amountOfFIFCoinForDAO);
 
-        token.approve(
-            stringToAddress(voucher.winnerAddress),
-            _amountOfFIFCoinForWinner
-        );
-        token.transfer(
-            address(stringToAddress(voucher.winnerAddress)),
-            _amountOfFIFCoinForWinner
-        );
-        emit RewardRedeemed(
-            stringToAddress(voucher.winnerAddress),
-            _amountOfFIFCoinForWinner
-        );
+        token.approve(stringToAddress(voucher.winnerAddress), _amountOfFIFCoinForWinner);
+        token.transfer(address(stringToAddress(voucher.winnerAddress)), _amountOfFIFCoinForWinner);
+        emit RewardRedeemed(stringToAddress(voucher.winnerAddress), _amountOfFIFCoinForWinner);
     }
 
     function stringToAddress(string calldata s) public pure returns (address) {
@@ -158,9 +139,7 @@ contract FIF is EIP712, AccessControl {
         return tempAddress;
     }
 
-    function hexStringToAddress(
-        string calldata s
-    ) public pure returns (bytes memory) {
+    function hexStringToAddress( string calldata s) public pure returns (bytes memory) {
         bytes memory ss = bytes(s);
         require(ss.length % 2 == 0); // length must be even
         bytes memory r = new bytes(ss.length / 2);
@@ -188,11 +167,7 @@ contract FIF is EIP712, AccessControl {
         return 0;
     }
 
-    /// @notice Returns a hash of the given WinnerVoucher, prepared using EIP712 typed data hashing rules.
-    /// @param voucher An WinnerVoucher to hash.
-    function _hash(
-        WinnerVoucher calldata voucher
-    ) internal view returns (bytes32) {
+    function _hash(WinnerVoucher calldata voucher) internal view returns (bytes32) {
         return
             _hashTypedDataV4(
                 keccak256(
@@ -211,9 +186,6 @@ contract FIF is EIP712, AccessControl {
             );
     }
 
-    /// @notice Returns the chain id of the current blockchain.
-    /// @dev This is used to workaround an issue with ganache returning different values from the on-chain chainid() function and
-    ///  the eth_chainId RPC method. See https://github.com/protocol/nft-website/issues/121 for context.
     function getChainID() external view returns (uint256) {
         uint256 id;
         assembly {
@@ -222,19 +194,12 @@ contract FIF is EIP712, AccessControl {
         return id;
     }
 
-    /// @notice Verifies the signature for a given WinnerVoucher, returning the address of the signer.
-    /// @dev Will revert if the signature is invalid. Does not verify that the signer is authorized to mint NFTs.
-    /// @param voucher An WinnerVoucher describing an unminted NFT.
-    function _verify(
-        WinnerVoucher calldata voucher
-    ) internal view returns (address) {
+    function _verify(WinnerVoucher calldata voucher) internal view returns (address) {
         bytes32 digest = _hash(voucher);
         return ECDSA.recover(digest, voucher.signature);
     }
 
-    function supportsInterface(
-        bytes4 interfaceId
-    ) public view virtual override(AccessControl) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(AccessControl) returns (bool) {
         return AccessControl.supportsInterface(interfaceId);
     }
 }
