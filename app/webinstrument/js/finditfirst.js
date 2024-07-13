@@ -438,7 +438,6 @@ let sketch = (p) => {
                     link.delete;
                 })
         }
-
         if (p.key === 'r') {
             if (gameStatus === `lose`) {
                 gameStatus = `ready`

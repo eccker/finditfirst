@@ -89,7 +89,7 @@ class card {
             ]
         }
     }
-
+ 
     initCards(p, cropAndResizeImage) {
         for (let index = 0; index < 6; index++) {
             if (this.imgs.length > 5) {
