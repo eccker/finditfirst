@@ -69,6 +69,10 @@ contract FIFGAME is EIP712, AccessControl {
     // TODO function to mint Tickets from Tokens
     // TODO prevent ticket withdraw
     // TODO prevent ticket transfer
+    // TODO create function to spend a ticket by creating or joining a room
+    // TODO once spent the ticket is owned by contract
+    // TODO spending a ticket will cause to burn it
+    
 
     function redeem(WinnerVoucher calldata voucher) public {
         // make sure signature is valid and get the address of the signer
