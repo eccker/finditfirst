@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract FIF is EIP712, AccessControl {
+contract FIFGAME is EIP712, AccessControl {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     string private constant SIGNING_DOMAIN = "FIND-IT-FIRST";
     string private constant SIGNATURE_VERSION = "1";

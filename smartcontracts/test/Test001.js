@@ -16,7 +16,7 @@ describe("Find It First Smart Contract Test", () => {
         
         findItFirstToken = await ethers.deployContract("FindItFirstToken", [owner.address, owner.address, owner.address, usdTokenTest.target, ethers.parseEther('0.1')]);
 
-        fif = await ethers.deployContract("FIF", [findItFirstToken.target], owner);
+        fif = await ethers.deployContract("FIFGAME", [findItFirstToken.target], owner);
 
         await usdTokenTest.connect(owner).transfer(player1.address, ethers.parseEther('1'))
         await usdTokenTest.connect(owner).transfer(player2.address, ethers.parseEther('1'))
