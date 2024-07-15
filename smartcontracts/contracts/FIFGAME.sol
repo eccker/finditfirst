@@ -41,9 +41,7 @@ contract FIFGAME is EIP712, AccessControl {
     event TransferTokens(address indexed player, uint256 amount);
     event RewardRedeemed(address indexed player, uint256 amount);
 
-    constructor(
-        address _tokenAddress
-    ) EIP712(SIGNING_DOMAIN, SIGNATURE_VERSION) {
+    constructor( address _tokenAddress ) EIP712(SIGNING_DOMAIN, SIGNATURE_VERSION) {
         _grantRole(MINTER_ROLE, msg.sender);
         token = IERC20(_tokenAddress);
     }
@@ -67,6 +65,10 @@ contract FIFGAME is EIP712, AccessControl {
         canPlay[msg.sender] = true;
         emit TransferTokens(msg.sender, amount);
     }
+
+    // TODO function to mint Tickets from Tokens
+    // TODO prevent ticket withdraw
+    // TODO prevent ticket transfer
 
     function redeem(WinnerVoucher calldata voucher) public {
         // make sure signature is valid and get the address of the signer
