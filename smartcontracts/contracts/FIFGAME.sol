@@ -10,23 +10,46 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+interface IFIFTicket {
+    function permit(
+        address owner,
+        address spender,
+        uint256 value,
+        uint256 deadline,
+        uint8 v,
+        bytes32 r,
+        bytes32 s
+    ) external;
+
+    function transferFrom(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) external returns (bool);
+
+    function mint(address to, uint256 amount) external;
+
+    function burn(uint256 amount) external;
+}
+
 contract FIFGAME is EIP712, AccessControl {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     string private constant SIGNING_DOMAIN = "FIND-IT-FIRST";
     string private constant SIGNATURE_VERSION = "1";
 
-    IERC20 public token; // Token ERC-20 utilizado en el juego
+    IERC20 public fifToken; // Standard ERC-20 Token
+    IFIFTicket public fifTicket; // Internal ERC-20 Token (Ticket)
 
     mapping(address => uint256) public balances; // Saldo de tokens de cada jugador
     mapping(uint256 => bool) public vouchers; // Indica si un jugador tiene un voucher
     mapping(address => bool) public canPlay; // Indica si un jugador puede jugar porque ya pagó
 
-    address public authorAddress = 0x090Ec11314d4BD31B536F52472d2E6A1D4771220;
-    address public DAOTreasuryAddress = 0x88c7CE98b4924c7eA58F160D3A128e0592ECB053;
-    address public DAOFundAddress = 0x2696b670D795e3B524880402C67b1ACCe6C1860f;
-    address public DevelopersAddress = 0x2696b670D795e3B524880402C67b1ACCe6C1860f;
-    address public ArtistsAddress = 0x2696b670D795e3B524880402C67b1ACCe6C1860f;
-    uint256 public priceToPlay = 1 ether;
+    address public AUTHOR_ADDRESS = 0x090Ec11314d4BD31B536F52472d2E6A1D4771220;
+    address public DAO_TREASURY_ADDRESS = 0x88c7CE98b4924c7eA58F160D3A128e0592ECB053;
+    address public DAO_FUND_ADDRESS = 0x2696b670D795e3B524880402C67b1ACCe6C1860f;
+    address public DEVELOPER_ADDRESS = 0x2696b670D795e3B524880402C67b1ACCe6C1860f;
+    address public ARTISTS_ADDRESS = 0x2696b670D795e3B524880402C67b1ACCe6C1860f;
+    uint256 public TOKEN_TO_TICKET_RATE = 1 ether;
     
     struct WinnerVoucher {
         uint256 voucherId;
@@ -39,40 +62,49 @@ contract FIFGAME is EIP712, AccessControl {
     }
 
     event TransferTokens(address indexed player, uint256 amount);
+    event GameMatchStarted(address indexed player, uint256 betAmount);
     event RewardRedeemed(address indexed player, uint256 amount);
 
-    constructor( address _tokenAddress ) EIP712(SIGNING_DOMAIN, SIGNATURE_VERSION) {
+    constructor( address _FIFTokenAddress, address _FIFTicketAddress ) EIP712(SIGNING_DOMAIN, SIGNATURE_VERSION) {
         _grantRole(MINTER_ROLE, msg.sender);
-        token = IERC20(_tokenAddress);
+        fifToken = IERC20(_FIFTokenAddress);
+        fifTicket = IFIFTicket(_FIFTicketAddress);
     }
 
-
-    function setPriceToPlay(uint256 price) external onlyRole(MINTER_ROLE) {
-        priceToPlay = price;
+    function setTokenToTicketRate(uint256 rate) external onlyRole(MINTER_ROLE) {
+        TOKEN_TO_TICKET_RATE = rate;
     }
 
-    function transferirTokens(uint256 amount) external {
+    function mintTickets(uint256 amount) external {
+    // TODO function to mint Tickets from Tokens
         require(
-            amount % priceToPlay == 0,
-            "Must send a multiple of the token price to play"
+            amount % TOKEN_TO_TICKET_RATE == 0,
+            "Must send a multiple of the T2TR"
         );
 
         require(
-            token.transferFrom(msg.sender, address(this), amount),
+            fifToken.transferFrom(msg.sender, address(this), amount),
             "Error en la transferencia"
         );
-        balances[msg.sender] += amount;
-        canPlay[msg.sender] = true;
-        emit TransferTokens(msg.sender, amount);
+
+        fifTicket.mint(msg.sender, amount);
+        // TODO prevent ticket withdraw
+        // TODO prevent ticket transfer
     }
 
-    // TODO function to mint Tickets from Tokens
-    // TODO prevent ticket withdraw
-    // TODO prevent ticket transfer
-    // TODO create function to spend a ticket by creating or joining a room
-    // TODO once spent the ticket is owned by contract
-    // TODO spending a ticket will cause to burn it
-    
+    function startGameMatch(uint256 _ticketsToBet) external {
+        require(
+            _ticketsToBet % 1 ether == 0,
+            "Must send a multiple of the T2TR"
+        );
+
+        require(
+            fifTicket.transferFrom(msg.sender, address(this), _ticketsToBet),
+            "Error en la transferencia"
+        );
+        fifTicket.burn(_ticketsToBet);
+        emit GameMatchStarted(msg.sender, _ticketsToBet);
+    }
 
     function redeem(WinnerVoucher calldata voucher) public {
         // make sure signature is valid and get the address of the signer
@@ -116,17 +148,17 @@ contract FIFGAME is EIP712, AccessControl {
         uint256 _amountOfFIFCoinForWinner = ((91803398874 * 10 ** 9) * voucher.winnerReward) / 10 ** 20; // 91.803398874 % BMMM3SC Sender
         uint256 _amountOfFIFCoinForDAO = ((3606797749 * 10 ** 9) * voucher.winnerReward) / 10 ** 20; //  3.606797749 % BMMM3SC DAO
 
-        token.approve(authorAddress, _amountOfFIFCoinForAuthor);
-        token.transfer(authorAddress, _amountOfFIFCoinForAuthor);
+        fifToken.approve(AUTHOR_ADDRESS, _amountOfFIFCoinForAuthor);
+        fifToken.transfer(AUTHOR_ADDRESS, _amountOfFIFCoinForAuthor);
 
-        token.approve(DAOTreasuryAddress, _amountOfFIFCoinForTreasury);
-        token.transfer(DAOTreasuryAddress, _amountOfFIFCoinForTreasury);
+        fifToken.approve(DAO_TREASURY_ADDRESS, _amountOfFIFCoinForTreasury);
+        fifToken.transfer(DAO_TREASURY_ADDRESS, _amountOfFIFCoinForTreasury);
 
-        token.approve(DAOFundAddress, _amountOfFIFCoinForDAO);
-        token.transfer(DAOFundAddress, _amountOfFIFCoinForDAO);
+        fifToken.approve(DAO_FUND_ADDRESS, _amountOfFIFCoinForDAO);
+        fifToken.transfer(DAO_FUND_ADDRESS, _amountOfFIFCoinForDAO);
 
-        token.approve(stringToAddress(voucher.winnerAddress), _amountOfFIFCoinForWinner);
-        token.transfer(address(stringToAddress(voucher.winnerAddress)), _amountOfFIFCoinForWinner);
+        fifToken.approve(stringToAddress(voucher.winnerAddress), _amountOfFIFCoinForWinner);
+        fifToken.transfer(address(stringToAddress(voucher.winnerAddress)), _amountOfFIFCoinForWinner);
         emit RewardRedeemed(stringToAddress(voucher.winnerAddress), _amountOfFIFCoinForWinner);
     }
 

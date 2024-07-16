@@ -33,6 +33,13 @@ contract FIFTicket is ERC20, ERC20Burnable, ERC20Pausable, AccessControl, ERC20P
         _mint(to, amount);
     }
 
+        // Override the burn function to provide custom logic if needed
+    function burn(uint256 amount) public virtual override {
+        super.burn(amount);
+        // Add custom logic here after burning tokens, if necessary
+        // TODO make burn only possible to FIFGAME contract
+    }
+
     // The following functions are overrides required by Solidity.
 
     function _update(address from, address to, uint256 value)
