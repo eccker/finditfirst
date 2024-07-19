@@ -5,7 +5,7 @@ const { ethers } = require("hardhat")
 var path = require('path')
 const TAG = path.basename(__filename) + `:`
 const re_getFileLine = /(?<=\/)[^\/]+\:\d+\:\d+/
-const DEBUG = false
+const DEBUG = true
 
 describe("Find It First Smart Contract Test", () => {
     let fifToken
@@ -17,36 +17,44 @@ describe("Find It First Smart Contract Test", () => {
     let userRandom
     beforeEach(async function () {
         [owner, player1, player2, userRandom] = await ethers.getSigners();
-        usdTokenTest = await ethers.deployContract("USDTokenTest");
-        DEBUG?console.log("USD Token Test deployed", `at ${(new Error().stack).match(re_getFileLine)}`):null
-        
-        
+        DEBUG?console.log(`\r\nowner address: ${owner.address},\r\np1    address: ${player1.address}, \r\np2    address: ${player2.address}`, `at ${(new Error().stack).match(re_getFileLine)}`):null
 
+        usdTokenTest = await ethers.deployContract("USDTokenTest");
+        DEBUG?console.log(`USD Token Test deployed at addres: ${usdTokenTest.target}`, `at ${(new Error().stack).match(re_getFileLine)}`):null
         
         fifToken = await ethers.deployContract("FIFToken", [owner.address, owner.address, owner.address, usdTokenTest.target, ethers.parseEther('0.1')]);
-        DEBUG?console.log("point 1"):null
+        DEBUG?console.log(`FIF Token      deployed at address: ${fifToken.target}`, `at ${(new Error().stack).match(re_getFileLine)}`):null
+
         fif = await ethers.deployContract("FIFGAME", [], owner);
+        DEBUG?console.log(`FIF Game       deployed at address: ${fif.target}`, `at ${(new Error().stack).match(re_getFileLine)}`):null
+
         fifTicket = await ethers.deployContract("FIFTicket", [owner.address, owner.address, fif.target]);
-        DEBUG?console.log("point 1a"):null
+        DEBUG?console.log(`FIF Ticket     deployed at address: ${fifTicket.target}`, `at ${(new Error().stack).match(re_getFileLine)}`):null
+        
         await fif.connect(owner).setTokenAndTicketAddress(fifToken.target, fifTicket.target)
 
         await usdTokenTest.connect(owner).transfer(player1.address, ethers.parseEther('1'))
         await usdTokenTest.connect(owner).transfer(player2.address, ethers.parseEther('1'))
-        DEBUG?console.log("point 2"):null
+        DEBUG?console.log(`USDTT transfer from owner to P1 (balance: ${await usdTokenTest.balanceOf(player1.address)}) and P2 (balance: ${await usdTokenTest.balanceOf(player2.address)})`, `at ${(new Error().stack).match(re_getFileLine)}`):null
         
         await usdTokenTest.connect(player1).approve(fifToken.target, ethers.parseEther('1'))
         await usdTokenTest.connect(player2).approve(fifToken.target, ethers.parseEther('1'))
-        DEBUG?console.log("point 3"):null
+        DEBUG?console.log(`USDTT approved from P1 (allowance: ${await usdTokenTest.allowance(player1.address, fifToken.target)}) and P2 (allowance: ${await usdTokenTest.allowance(player2.address, fifToken.target)}) to FIF Token`, `at ${(new Error().stack).match(re_getFileLine)}`):null
         
         await fifToken.connect(player1).mint(player1.address, ethers.parseEther('1'));
         await fifToken.connect(player2).mint(player2.address, ethers.parseEther('1'));
+        DEBUG?console.log(`FIF Token minted by P1 (balance: ${await fifToken.balanceOf(player1.address)}) and P2 (balance: ${await fifToken.balanceOf(player2.address)}) to FIF Token`, `at ${(new Error().stack).match(re_getFileLine)}`):null
+
 
         await fifToken.connect(player1).approve(fif.target, ethers.parseEther('1'))
         await fifToken.connect(player2).approve(fif.target, ethers.parseEther('1'))
+        DEBUG?console.log(`FIF Token approved from P1 (allowance: ${await fifToken.allowance(player1.address, fif.target)}) and P2 (allowance: ${await fifToken.allowance(player2.address, fif.target)}) to FIF Token`, `at ${(new Error().stack).match(re_getFileLine)}`):null
+
    
         // FIFGAME contract is the only one who can mint tickets to players
         await fif.connect(player1).mintTickets(ethers.parseEther('1'))
         await fif.connect(player2).mintTickets(ethers.parseEther('1'))
+        DEBUG?console.log(`FIF Tickets minted by P1 (balance: ${await fifTicket.balanceOf(player1.address)}) and P2 (balance: ${await fifTicket.balanceOf(player2.address)}) to FIF Token`, `at ${(new Error().stack).match(re_getFileLine)}`):null
       
 
 

@@ -35,8 +35,6 @@ interface IFIFTicket {
 }
 
 contract FIFGAME is EIP712, AccessControl {
-    uint256 debug = 0;
-
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     string private constant SIGNING_DOMAIN = "FIND-IT-FIRST";
     string private constant SIGNATURE_VERSION = "1";
