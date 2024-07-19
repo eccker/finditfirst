@@ -3,6 +3,8 @@ pragma solidity ^0.8.20;
 pragma abicoder v2; // required to accept structs as function parameters
 
 import "hardhat/console.sol";
+bool constant DEBUG = false;
+
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
@@ -33,6 +35,8 @@ interface IFIFTicket {
 }
 
 contract FIFGAME is EIP712, AccessControl {
+    uint256 debug = 0;
+
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     string private constant SIGNING_DOMAIN = "FIND-IT-FIRST";
     string private constant SIGNATURE_VERSION = "1";
@@ -91,12 +95,12 @@ contract FIFGAME is EIP712, AccessControl {
         fifTicket.mint(msg.sender, amount);
         // TODO prevent ticket withdraw
         // TODO prevent ticket transfer
-        console.log("SC ::: FIFTicket minted: mintTickets", msg.sender, amount);
+        DEBUG?console.log("SC ::: FIFTicket minted: mintTickets", msg.sender, amount): ();
 
     }
 
     function startGameMatch(uint256 _ticketsToBet) external {
-        console.log("SC ::: START: startGameMatch", msg.sender);
+        DEBUG?console.log("SC ::: START: startGameMatch", msg.sender):();
         require(
             _ticketsToBet % 1 ether == 0,
             "Must send a multiple of the T2TR"
@@ -108,7 +112,7 @@ contract FIFGAME is EIP712, AccessControl {
         );
         fifTicket.burn(_ticketsToBet);
         emit GameMatchStarted(msg.sender, _ticketsToBet);
-        console.log("SC ::: END of startGameMatch");
+        DEBUG?console.log("SC ::: END of startGameMatch"):();
     }
 
     function redeem(WinnerVoucher calldata voucher) public {

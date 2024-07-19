@@ -1,6 +1,11 @@
-const { expect } = require("chai");
-const { VoucherMaker } = require('../lib');
-const { ethers } = require("hardhat");
+const { expect } = require("chai")
+const { VoucherMaker } = require('../lib')
+const { ethers } = require("hardhat")
+
+var path = require('path')
+const TAG = path.basename(__filename) + `:`
+const re_getFileLine = /(?<=\/)[^\/]+\:\d+\:\d+/
+const DEBUG = false
 
 describe("Find It First Smart Contract Test", () => {
     let fifToken
@@ -13,22 +18,25 @@ describe("Find It First Smart Contract Test", () => {
     beforeEach(async function () {
         [owner, player1, player2, userRandom] = await ethers.getSigners();
         usdTokenTest = await ethers.deployContract("USDTokenTest");
-        console.log("point 0")
+        DEBUG?console.log("USD Token Test deployed", `at ${(new Error().stack).match(re_getFileLine)}`):null
+        
+        
+
         
         fifToken = await ethers.deployContract("FIFToken", [owner.address, owner.address, owner.address, usdTokenTest.target, ethers.parseEther('0.1')]);
-        console.log("point 1")
+        DEBUG?console.log("point 1"):null
         fif = await ethers.deployContract("FIFGAME", [], owner);
         fifTicket = await ethers.deployContract("FIFTicket", [owner.address, owner.address, fif.target]);
-        console.log("point 1a")
+        DEBUG?console.log("point 1a"):null
         await fif.connect(owner).setTokenAndTicketAddress(fifToken.target, fifTicket.target)
 
         await usdTokenTest.connect(owner).transfer(player1.address, ethers.parseEther('1'))
         await usdTokenTest.connect(owner).transfer(player2.address, ethers.parseEther('1'))
-        console.log("point 2")
+        DEBUG?console.log("point 2"):null
         
         await usdTokenTest.connect(player1).approve(fifToken.target, ethers.parseEther('1'))
         await usdTokenTest.connect(player2).approve(fifToken.target, ethers.parseEther('1'))
-        console.log("point 3")
+        DEBUG?console.log("point 3"):null
         
         await fifToken.connect(player1).mint(player1.address, ethers.parseEther('1'));
         await fifToken.connect(player2).mint(player2.address, ethers.parseEther('1'));
@@ -47,7 +55,7 @@ describe("Find It First Smart Contract Test", () => {
       
         await fif.connect(player1).startGameMatch(ethers.parseEther('1'))
         await fif.connect(player2).startGameMatch(ethers.parseEther('1'))
-        console.log("point 4")
+        DEBUG?console.log("point 4"):null
     
     });
 
@@ -57,9 +65,9 @@ describe("Find It First Smart Contract Test", () => {
         winnerReward = ethers.parseEther('2'), 
         winnerBet = ethers.parseEther('1'), 
         winnerAddress =  `${player1.address}`
-
+ 
         const voucher = await voucherMaker.createVoucher(voucherID, winnerReward, winnerBet, winnerAddress)
-        console.log("point 5")
+        DEBUG?console.log("point 5"):null
         
         expect(await fif.redeem(voucher))
         .to.emit(fif, 'RewardRedeemed')  // transfer from null address to minter
