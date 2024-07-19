@@ -91,12 +91,12 @@ contract FIFGAME is EIP712, AccessControl {
         fifTicket.mint(msg.sender, amount);
         // TODO prevent ticket withdraw
         // TODO prevent ticket transfer
-        console.log("FIFTicket minted: mintTickets", msg.sender, amount);
+        console.log("SC ::: FIFTicket minted: mintTickets", msg.sender, amount);
 
     }
 
     function startGameMatch(uint256 _ticketsToBet) external {
-        console.log("START: startGameMatch", msg.sender);
+        console.log("SC ::: START: startGameMatch", msg.sender);
         require(
             _ticketsToBet % 1 ether == 0,
             "Must send a multiple of the T2TR"
@@ -108,7 +108,7 @@ contract FIFGAME is EIP712, AccessControl {
         );
         fifTicket.burn(_ticketsToBet);
         emit GameMatchStarted(msg.sender, _ticketsToBet);
-        console.log("startGameMatch");
+        console.log("SC ::: END of startGameMatch");
     }
 
     function redeem(WinnerVoucher calldata voucher) public {
@@ -123,29 +123,7 @@ contract FIFGAME is EIP712, AccessControl {
 
         require(vouchers[voucher.voucherId] != true, "Voucher spent");
 
-        // require(
-        //     voucher.winnerBet + voucher.loserBet == voucher.winnerReward,
-        //     "Voucher reward and bets do not match"
-        // );
-
-        // require(
-        //     balances[stringToAddress(voucher.winnerAddress)] >=
-        //         voucher.winnerBet &&
-        //         balances[stringToAddress(voucher.loserAddress)] >=
-        //         voucher.loserBet,
-        //     "Balances and Bets not matching"
-        // );
-
         vouchers[voucher.voucherId] = true;
-
-        // balances[stringToAddress(voucher.winnerAddress)] -= voucher.winnerBet;
-        // balances[stringToAddress(voucher.loserAddress)] -= voucher.loserBet;
-        // if (balances[stringToAddress(voucher.loserAddress)] == 0) {
-        //     canPlay[stringToAddress(voucher.loserAddress)] = false;
-        // }
-        // if (balances[stringToAddress(voucher.winnerAddress)] == 0) {
-        //     canPlay[stringToAddress(voucher.winnerAddress)] = false;
-        // }
 
         // TODO partition the Reward to cover FIF fee
         uint256 _amountOfFIFCoinForAuthor = ((2128623629 * 10 ** 9) * voucher.winnerReward) / 10 ** 20; //  2.128623629 % BMMM3SC Author
