@@ -35,35 +35,38 @@ describe("Find It First Smart Contract Test", () => {
 
         await usdTokenTest.connect(owner).transfer(player1.address, ethers.parseEther('1'))
         await usdTokenTest.connect(owner).transfer(player2.address, ethers.parseEther('1'))
-        DEBUG?console.log(`USDTT transfer from owner to P1 (balance: ${await usdTokenTest.balanceOf(player1.address)}) and P2 (balance: ${await usdTokenTest.balanceOf(player2.address)})`, `at ${(new Error().stack).match(re_getFileLine)}`):null
+        DEBUG?console.log(`USDTT transfer from owner to P1 (balance: ${await usdTokenTest.balanceOf(player1.address)}) and P2 (  balance: ${await usdTokenTest.balanceOf(player2.address)})`, `at ${(new Error().stack).match(re_getFileLine)}`):null
         
         await usdTokenTest.connect(player1).approve(fifToken.target, ethers.parseEther('1'))
         await usdTokenTest.connect(player2).approve(fifToken.target, ethers.parseEther('1'))
-        DEBUG?console.log(`USDTT approved from P1 (allowance: ${await usdTokenTest.allowance(player1.address, fifToken.target)}) and P2 (allowance: ${await usdTokenTest.allowance(player2.address, fifToken.target)}) to FIF Token`, `at ${(new Error().stack).match(re_getFileLine)}`):null
+        DEBUG?console.log(`USDTT approved from P1        (allowance: ${await usdTokenTest.allowance(player1.address, fifToken.target)}) and P2 (allowance: ${await usdTokenTest.allowance(player2.address, fifToken.target)}) to FIF Token`, `at ${(new Error().stack).match(re_getFileLine)}`):null
         
         await fifToken.connect(player1).mint(player1.address, ethers.parseEther('1'));
         await fifToken.connect(player2).mint(player2.address, ethers.parseEther('1'));
-        DEBUG?console.log(`FIF Token minted by P1 (balance: ${await fifToken.balanceOf(player1.address)}) and P2 (balance: ${await fifToken.balanceOf(player2.address)}) to FIF Token`, `at ${(new Error().stack).match(re_getFileLine)}`):null
+        DEBUG?console.log(`FIF Token minted by P1          (balance: ${await fifToken.balanceOf(player1.address)}) and P2 (  balance: ${await fifToken.balanceOf(player2.address)}) to FIF Token`, `at ${(new Error().stack).match(re_getFileLine)}`):null
 
 
         await fifToken.connect(player1).approve(fif.target, ethers.parseEther('1'))
         await fifToken.connect(player2).approve(fif.target, ethers.parseEther('1'))
-        DEBUG?console.log(`FIF Token approved from P1 (allowance: ${await fifToken.allowance(player1.address, fif.target)}) and P2 (allowance: ${await fifToken.allowance(player2.address, fif.target)}) to FIF Token`, `at ${(new Error().stack).match(re_getFileLine)}`):null
+        DEBUG?console.log(`FIF Token approved from P1    (allowance: ${await fifToken.allowance(player1.address, fif.target)}) and P2 (allowance: ${await fifToken.allowance(player2.address, fif.target)}) to FIF Token`, `at ${(new Error().stack).match(re_getFileLine)}`):null
 
    
         // FIFGAME contract is the only one who can mint tickets to players
         await fif.connect(player1).mintTickets(ethers.parseEther('1'))
         await fif.connect(player2).mintTickets(ethers.parseEther('1'))
-        DEBUG?console.log(`FIF Tickets minted by P1 (balance: ${await fifTicket.balanceOf(player1.address)}) and P2 (balance: ${await fifTicket.balanceOf(player2.address)}) to FIF Token`, `at ${(new Error().stack).match(re_getFileLine)}`):null
+        DEBUG?console.log(`FIF Tickets minted by P1        (balance: ${await fifTicket.balanceOf(player1.address)}) and P2 (  balance: ${await fifTicket.balanceOf(player2.address)}) to FIF Token`, `at ${(new Error().stack).match(re_getFileLine)}`):null
       
 
-
+        // TODO make use of permit functionality to avoud approve gas consupmtion 
         await fifTicket.connect(player1).approve(fif.target, ethers.parseEther('1'))
         await fifTicket.connect(player2).approve(fif.target, ethers.parseEther('1'))
+        DEBUG?console.log(`FIF Tickets approved by P1    (allowance: ${await fifTicket.allowance(player1.address, fif.target)}) and P2 (allowance: ${await fifTicket.allowance(player2.address, fif.target)}) to FIF GAME`, `at ${(new Error().stack).match(re_getFileLine)}`):null
+
       
         await fif.connect(player1).startGameMatch(ethers.parseEther('1'))
         await fif.connect(player2).startGameMatch(ethers.parseEther('1'))
-        DEBUG?console.log("point 4"):null
+        DEBUG?console.log(`FIF Tickets balance by P1 (balance: ${await fifTicket.balanceOf(player1.address)}) and P2 (balance: ${await fifTicket.balanceOf(player2.address)}) after spent tickets on FIF GAME`, `at ${(new Error().stack).match(re_getFileLine)}`):null
+
     
     });
 
