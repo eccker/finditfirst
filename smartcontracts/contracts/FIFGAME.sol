@@ -78,8 +78,7 @@ contract FIFGAME is EIP712, AccessControl {
         TOKEN_TO_TICKET_RATE = rate;
     }
 
-    function mintTickets(uint256 amount) external {
-    // TODO function to mint Tickets from Tokens
+    function mintTickets(uint256 amount) external {//  function to mint Tickets from Tokens
         require(
             amount % TOKEN_TO_TICKET_RATE == 0,
             "Must send a multiple of the T2TR"
@@ -98,6 +97,8 @@ contract FIFGAME is EIP712, AccessControl {
     }
 
     function startGameMatch(uint256 _ticketsToBet) external {
+
+
         DEBUG?console.log("SC ::: START: startGameMatch", msg.sender):();
         require(
             _ticketsToBet % 1 ether == 0,
@@ -109,6 +110,8 @@ contract FIFGAME is EIP712, AccessControl {
             "Error en la transferencia"
         );
         fifTicket.burn(_ticketsToBet);
+        
+        // TODO: request a random number (chainlink) and event emit the requestId and assign it to sender
         emit GameMatchStarted(msg.sender, _ticketsToBet);
         DEBUG?console.log("SC ::: END of startGameMatch"):();
     }

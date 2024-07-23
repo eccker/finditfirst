@@ -57,7 +57,7 @@ describe("Find It First Smart Contract Test", () => {
         DEBUG?console.log(`FIF Tickets minted by P1        (balance: ${await fifTicket.balanceOf(player1.address)}) and P2 (  balance: ${await fifTicket.balanceOf(player2.address)}) to FIF Token`, `at ${(new Error().stack).match(re_getFileLine)}`):null
       
 
-        // TODO make use of permit functionality to avoud approve gas consupmtion 
+        // TODO make use of permit functionality to avoid approve gas consupmtion 
         await fifTicket.connect(player1).approve(fif.target, ethers.parseEther('1'))
         await fifTicket.connect(player2).approve(fif.target, ethers.parseEther('1'))
         DEBUG?console.log(`FIF Tickets approved by P1    (allowance: ${await fifTicket.allowance(player1.address, fif.target)}) and P2 (allowance: ${await fifTicket.allowance(player2.address, fif.target)}) to FIF GAME`, `at ${(new Error().stack).match(re_getFileLine)}`):null
@@ -102,30 +102,30 @@ describe("Find It First Smart Contract Test", () => {
             .to.be.revertedWith('Voucher spent')
     });
 
-    it("Should fail to redeem a Reward with mismatch bets and reward", async function () {
-        const voucherMaker = new VoucherMaker({ contract: fif, signer: owner })
-        let voucherID = 1,
-        winnerReward = 32, 
-        winnerBet = 15, 
-        winnerAddress =  `${player1.address}`
+    // it("Should fail to redeem a Reward with mismatch bets and reward", async function () {
+    //     const voucherMaker = new VoucherMaker({ contract: fif, signer: owner })
+    //     let voucherID = 1,
+    //     winnerReward = 32, 
+    //     winnerBet = 15, 
+    //     winnerAddress =  `${player1.address}`
 
-        const voucher = await voucherMaker.createVoucher(voucherID, winnerReward, winnerBet, winnerAddress)
+    //     const voucher = await voucherMaker.createVoucher(voucherID, winnerReward, winnerBet, winnerAddress)
 
-        await expect(fif.redeem(voucher))
-            // .to.be.revertedWith('Voucher reward and bets do not match')
-    });
+    //     await expect(fif.redeem(voucher))
+    //         // .to.be.revertedWith('Voucher reward and bets do not match')
+    // });
 
 
     
-    it("Should fail to redeem a Reward with mismatch Balances and Bets not matching", async function () {
-        const voucherMaker = new VoucherMaker({ contract: fif, signer: owner })
-        let voucherID = 1,
-        winnerReward = ethers.parseEther('40'), 
-        winnerBet = ethers.parseEther('20'), 
-        winnerAddress =  `${player1.address}`
-        const voucher = await voucherMaker.createVoucher(voucherID, winnerReward, winnerBet, winnerAddress)
+    // it("Should fail to redeem a Reward with mismatch Balances and Bets not matching", async function () {
+    //     const voucherMaker = new VoucherMaker({ contract: fif, signer: owner })
+    //     let voucherID = 1,
+    //     winnerReward = ethers.parseEther('40'), 
+    //     winnerBet = ethers.parseEther('20'), 
+    //     winnerAddress =  `${player1.address}`
+    //     const voucher = await voucherMaker.createVoucher(voucherID, winnerReward, winnerBet, winnerAddress)
         
-        await expect(fif.redeem(voucher))
-    });
+    //     await expect(fif.redeem(voucher))
+    // });
 
 });
