@@ -2,10 +2,14 @@ const { expect } = require("chai")
 const { VoucherMaker } = require('../lib')
 const { ethers } = require("hardhat")
 
+require("dotenv").config();
+
 var path = require('path')
 const TAG = path.basename(__filename) + `:`
 const re_getFileLine = /(?<=\/)[^\/]+\:\d+\:\d+/
 const DEBUG = true
+const subscription_id = hre.ethers.parseUnits(process.env.SUBSCRIPTION_ID, 0);
+
 
 describe("Find It First Smart Contract Test", () => {
     let fifToken
@@ -24,8 +28,7 @@ describe("Find It First Smart Contract Test", () => {
         
         fifToken = await ethers.deployContract("FIFToken", [owner.address, owner.address, owner.address, usdTokenTest.target, ethers.parseEther('0.1')]);
         DEBUG?console.log(`FIF Token      deployed at address: ${fifToken.target}`, `at ${(new Error().stack).match(re_getFileLine)}`):null
-
-        fif = await ethers.deployContract("FIFGAME", [], owner);
+        fif = await ethers.deployContract("FIFGameHS", [subscription_id], owner);
         DEBUG?console.log(`FIF Game       deployed at address: ${fif.target}`, `at ${(new Error().stack).match(re_getFileLine)}`):null
 
         fifTicket = await ethers.deployContract("FIFTicket", [owner.address, owner.address, fif.target]);
@@ -51,7 +54,7 @@ describe("Find It First Smart Contract Test", () => {
         DEBUG?console.log(`FIF Token approved from P1    (allowance: ${await fifToken.allowance(player1.address, fif.target)}) and P2 (allowance: ${await fifToken.allowance(player2.address, fif.target)}) to FIF Token`, `at ${(new Error().stack).match(re_getFileLine)}`):null
 
    
-        // FIFGAME contract is the only one who can mint tickets to players
+        // FIFGameHS contract is the only one who can mint tickets to players
         await fif.connect(player1).mintTickets(ethers.parseEther('1'))
         await fif.connect(player2).mintTickets(ethers.parseEther('1'))
         DEBUG?console.log(`FIF Tickets minted by P1        (balance: ${await fifTicket.balanceOf(player1.address)}) and P2 (  balance: ${await fifTicket.balanceOf(player2.address)}) to FIF Token`, `at ${(new Error().stack).match(re_getFileLine)}`):null

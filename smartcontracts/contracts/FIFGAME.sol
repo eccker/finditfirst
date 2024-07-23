@@ -12,6 +12,9 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
+import {VRFConsumerBaseV2Plus} from "@chainlink/contracts/src/v0.8/vrf/dev/VRFConsumerBaseV2Plus.sol";
+import {VRFV2PlusClient} from "@chainlink/contracts/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
+
 interface IFIFTicket {
     function permit(
         address owner,
@@ -34,7 +37,15 @@ interface IFIFTicket {
     function burn(uint256 amount) external;
 }
 
-contract FIFGAME is EIP712, AccessControl {
+contract FIFGameHS is EIP712, AccessControl,  VRFConsumerBaseV2Plus {
+    
+uint256 s_subscriptionId;
+address vrfCoordinator = 0x343300b5d84D444B2ADc9116FEF1bED02BE49Cf2;
+bytes32 s_keyHash = 0x816bedba8a50b294e5cbd47842baf240c2385f2eaf719edbd4f250a137a8c899;
+uint32 callbackGasLimit = 40000;
+uint16 requestConfirmations = 3;
+uint32 numWords =  256;
+
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     string private constant SIGNING_DOMAIN = "FIND-IT-FIRST";
     string private constant SIGNATURE_VERSION = "1";
@@ -64,8 +75,11 @@ contract FIFGAME is EIP712, AccessControl {
     event TransferTokens(address indexed player, uint256 amount);
     event GameMatchStarted(address indexed player, uint256 betAmount);
     event RewardRedeemed(address indexed player, uint256 amount);
+    event GameMatchStarted(uint256 indexed requestId, uint256 indexed result);
 
-    constructor( ) EIP712(SIGNING_DOMAIN, SIGNATURE_VERSION) {
+
+    constructor(uint256 subscriptionId) VRFConsumerBaseV2Plus(vrfCoordinator) EIP712(SIGNING_DOMAIN, SIGNATURE_VERSION) {
+        s_subscriptionId = subscriptionId;
         _grantRole(MINTER_ROLE, msg.sender);
     }
 
@@ -114,6 +128,11 @@ contract FIFGAME is EIP712, AccessControl {
         // TODO: request a random number (chainlink) and event emit the requestId and assign it to sender
         emit GameMatchStarted(msg.sender, _ticketsToBet);
         DEBUG?console.log("SC ::: END of startGameMatch"):();
+    }
+
+    function fulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) internal override {
+        uint256 rn = randomWords[0];
+        emit GameMatchStarted(requestId, rn);
     }
 
     function redeem(WinnerVoucher calldata voucher) public {
