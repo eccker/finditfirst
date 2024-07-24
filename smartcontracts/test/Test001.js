@@ -10,7 +10,19 @@ const re_getFileLine = /(?<=\/)[^\/]+\:\d+\:\d+/
 const DEBUG = true
 const subscription_id = hre.ethers.parseUnits(process.env.SUBSCRIPTION_ID, 0);
 
-
+const emittedEvents = [];
+const saveEvents = async (tx) => {
+    const receipt = await tx.wait()
+    receipt.events.forEach(ev => {
+        if (ev.event) {
+            emittedEvents.push({
+                name: ev.event,
+                args: ev.args
+            });
+        }
+    });
+    console.log(`emittedEvents: `, emittedEvents);
+}
 describe("Find It First Smart Contract Test", () => {
     let fifToken
     let usdTokenTest
@@ -19,6 +31,7 @@ describe("Find It First Smart Contract Test", () => {
     let player1
     let player2
     let userRandom
+    let fifVRFCoordinatorV2_5Mock
     beforeEach(async function () {
         [owner, player1, player2, userRandom] = await ethers.getSigners();
         DEBUG?console.log(`\r\nowner address: ${owner.address},\r\np1    address: ${player1.address}, \r\np2    address: ${player2.address}`, `at ${(new Error().stack).match(re_getFileLine)}`):null
@@ -28,8 +41,40 @@ describe("Find It First Smart Contract Test", () => {
         
         fifToken = await ethers.deployContract("FIFToken", [owner.address, owner.address, owner.address, usdTokenTest.target, ethers.parseEther('0.1')]);
         DEBUG?console.log(`FIF Token      deployed at address: ${fifToken.target}`, `at ${(new Error().stack).match(re_getFileLine)}`):null
-        fif = await ethers.deployContract("FIFGameHS", [subscription_id], owner);
+        
+        fifVRFCoordinatorV2_5Mock = await ethers.deployContract("VRFCoordinatorV2_5Mock",[ethers.parseUnits("100000000000000000", 0), ethers.parseUnits("1000000000", 0), ethers.parseUnits("4045497107641754", 0)])
+        DEBUG?console.log(`fifVRFCoordinatorV2_5Mock deployed at address: ${fifVRFCoordinatorV2_5Mock.target}`, `at ${(new Error().stack).match(re_getFileLine)}`):null
+        
+        // expect(await fifVRFCoordinatorV2_5Mock.createSubscription()).to.emit(fifVRFCoordinatorV2_5Mock,'SubscriptionCreated')
+
+        fifVRFCoordinatorV2_5Mock.on("*", (event) => {
+            // The `event.log` has the entire EventLog
+            console.log(`  ????????????????\n\n ${JSON.stringify(event,null, 4)} \n\n????????`)
+          });
+        let mock_subscription_id = await fifVRFCoordinatorV2_5Mock.createSubscription()
+        filter = fifVRFCoordinatorV2_5Mock.filters.SubscriptionCreated
+        events = await fifVRFCoordinatorV2_5Mock.queryFilter(filter, 1)
+
+// The events are a normal Array
+        console.log(events.length)
+        const subId = events[0].args[0];
+        console.log(subId)
+        
+        
+        // saveEvents(mock_subscription_id)
+        // let recibo = await mock_subscription_id.wait()
+        // console.log(`**************\n\n${JSON.stringify(recibo,null, 4)}\n\n`)
+        
+        await fifVRFCoordinatorV2_5Mock.fundSubscription(subId, ethers.parseEther('1'))
+        DEBUG?console.log(`fundSubscription completed`, `at ${(new Error().stack).match(re_getFileLine)}`):null
+
+
+        fif = await ethers.deployContract("FIFGameHS", [subId, fifVRFCoordinatorV2_5Mock.target], owner);
         DEBUG?console.log(`FIF Game       deployed at address: ${fif.target}`, `at ${(new Error().stack).match(re_getFileLine)}`):null
+
+        await fifVRFCoordinatorV2_5Mock.addConsumer(subId, fif.target)
+        
+
 
         fifTicket = await ethers.deployContract("FIFTicket", [owner.address, owner.address, fif.target]);
         DEBUG?console.log(`FIF Ticket     deployed at address: ${fifTicket.target}`, `at ${(new Error().stack).match(re_getFileLine)}`):null
@@ -69,7 +114,6 @@ describe("Find It First Smart Contract Test", () => {
         await fif.connect(player1).startGameMatch(ethers.parseEther('1'))
         await fif.connect(player2).startGameMatch(ethers.parseEther('1'))
         DEBUG?console.log(`FIF Tickets balance by P1 (balance: ${await fifTicket.balanceOf(player1.address)}) and P2 (balance: ${await fifTicket.balanceOf(player2.address)}) after spent tickets on FIF GAME`, `at ${(new Error().stack).match(re_getFileLine)}`):null
-
     
     });
 

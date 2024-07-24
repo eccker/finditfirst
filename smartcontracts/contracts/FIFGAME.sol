@@ -53,9 +53,25 @@ uint32 numWords =  256;
     IERC20 public fifToken; // Standard ERC-20 Token
     IFIFTicket public fifTicket; // Internal ERC-20 Token (Ticket)
 
-    mapping(address => uint256) public balances; // Saldo de tokens de cada jugador
+    // mapping(address => uint256) public balances; // Saldo de tokens de cada jugador
     mapping(uint256 => bool) public vouchers; // Indica si un jugador tiene un voucher
-    mapping(address => bool) public canPlay; // Indica si un jugador puede jugar porque ya pagó
+    // mapping(address => bool) public canPlay; // Indica si un jugador puede jugar porque ya pagó
+
+     uint32 constant CALLBACK_GAS_LIMIT = 100000;
+
+    // The default is 3, but you can set this higher.
+    uint16 constant REQUEST_CONFIRMATIONS = 3;
+
+    // For this example, retrieve 2 random values in one request.
+    // Cannot exceed VRFCoordinatorV2_5.MAX_NUM_WORDS.
+    uint32 constant NUM_WORDS = 100;
+
+    uint256[] public s_randomWords;
+    uint256 public s_requestId;
+
+    mapping(uint256 => address) private s_players;
+    mapping(address => uint256) private s_results;
+
 
     address public AUTHOR_ADDRESS = 0x090Ec11314d4BD31B536F52472d2E6A1D4771220;
     address public DAO_TREASURY_ADDRESS = 0x88c7CE98b4924c7eA58F160D3A128e0592ECB053;
@@ -73,12 +89,12 @@ uint32 numWords =  256;
     }
 
     event TransferTokens(address indexed player, uint256 amount);
-    event GameMatchStarted(address indexed player, uint256 betAmount);
+    event GameMatchStarted(address indexed player, uint256 indexed requestId, uint256 randomNumbers);
     event RewardRedeemed(address indexed player, uint256 amount);
-    event GameMatchStarted(uint256 indexed requestId, uint256 indexed result);
+    event GameMatchInitiated(address indexed player, uint256 indexed betAmount, uint256 indexed requestId);
 
 
-    constructor(uint256 subscriptionId) VRFConsumerBaseV2Plus(vrfCoordinator) EIP712(SIGNING_DOMAIN, SIGNATURE_VERSION) {
+    constructor(uint256 subscriptionId, address _vrfCoordinator) VRFConsumerBaseV2Plus(_vrfCoordinator) EIP712(SIGNING_DOMAIN, SIGNATURE_VERSION) {
         s_subscriptionId = subscriptionId;
         _grantRole(MINTER_ROLE, msg.sender);
     }
@@ -124,15 +140,33 @@ uint32 numWords =  256;
             "Error en la transferencia"
         );
         fifTicket.burn(_ticketsToBet);
+
+        
+
+        s_requestId = s_vrfCoordinator.requestRandomWords(
+            VRFV2PlusClient.RandomWordsRequest({
+                keyHash: s_keyHash,
+                subId: s_subscriptionId,
+                requestConfirmations: REQUEST_CONFIRMATIONS,
+                callbackGasLimit: CALLBACK_GAS_LIMIT,
+                numWords: NUM_WORDS,
+                extraArgs: VRFV2PlusClient._argsToBytes(
+                    VRFV2PlusClient.ExtraArgsV1({nativePayment: false})
+                )
+            })
+        );
+
+        s_players[s_requestId] = msg.sender;
+        s_results[msg.sender] = 1;
         
         // TODO: request a random number (chainlink) and event emit the requestId and assign it to sender
-        emit GameMatchStarted(msg.sender, _ticketsToBet);
+        emit GameMatchInitiated(msg.sender, _ticketsToBet, s_requestId);
         DEBUG?console.log("SC ::: END of startGameMatch"):();
     }
 
     function fulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) internal override {
         uint256 rn = randomWords[0];
-        emit GameMatchStarted(requestId, rn);
+        emit GameMatchStarted(s_players[s_requestId], requestId, rn);
     }
 
     function redeem(WinnerVoucher calldata voucher) public {
