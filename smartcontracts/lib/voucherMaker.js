@@ -40,17 +40,25 @@ class VoucherMaker {
    * 
    * @returns {WinnerVoucher}
    */
-async createVoucher(voucherId, winnerReward, winnerBet, loserBet, winnerAddress, loserAddress) {
-    const voucher = { voucherId, winnerReward, winnerBet, loserBet, winnerAddress, loserAddress }
+async createVoucher(voucherId, winnerReward, winnerBet, winnerAddress) {
+  /**
+   *  struct WinnerVoucher {
+        uint256 voucherId;
+        uint256 winnerReward;
+        uint256 winnerBet;
+        string winnerAddress;
+        bytes signature;
+      }
+   * 
+   */
+    const voucher = { voucherId, winnerReward, winnerBet, winnerAddress,  }
     const domain = await this._signingDomain()
     const types = {
       WinnerVoucher: [
         {name: "voucherId", type: "uint256"},
         {name: "winnerReward", type: "uint256"},  
         {name: "winnerBet", type: "uint256"},  
-        {name: "loserBet", type: "uint256"},  
-        {name: "winnerAddress", type: "string"},
-        {name: "loserAddress", type: "string"},  
+        {name: "winnerAddress", type: "string"},  
       ]
     }
     const signature = await this.signer.signTypedData(domain, types, voucher)
