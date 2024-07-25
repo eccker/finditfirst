@@ -66,6 +66,7 @@ contract FIFGameHS is EIP712, AccessControl,  VRFConsumerBaseV2Plus {
     
     uint256[] public s_randomWords;
     uint256 public s_requestId;
+    uint256 public highScorePool = 0;
 
     struct WinnerVoucher {
         uint256 voucherId;
@@ -127,7 +128,7 @@ contract FIFGameHS is EIP712, AccessControl,  VRFConsumerBaseV2Plus {
         );
         fifTicket.burn(_ticketsToBet);
 
-        
+        highScorePool += _ticketsToBet;
 
         s_requestId = s_vrfCoordinator.requestRandomWords(
             VRFV2PlusClient.RandomWordsRequest({
@@ -145,7 +146,8 @@ contract FIFGameHS is EIP712, AccessControl,  VRFConsumerBaseV2Plus {
         s_players[s_requestId] = msg.sender;
         s_results[msg.sender] = 1;
         
-        // TODO: request a random number (chainlink) and event emit the requestId and assign it to sender
+        // request a random number (chainlink) and 
+        // event emit the sender, bet and requestId
         emit GameMatchRequested(msg.sender, _ticketsToBet, s_requestId);
         DEBUG?console.log("SC ::: END of startGameMatch"):();
     }
@@ -168,8 +170,9 @@ contract FIFGameHS is EIP712, AccessControl,  VRFConsumerBaseV2Plus {
         require(vouchers[voucher.voucherId] != true, "Voucher spent");
 
         vouchers[voucher.voucherId] = true;
-
-        // TODO partition the Reward to cover FIF fee
+        highScorePool -= voucher.winnerReward;
+        
+        // partition the Reward to cover FIF fee
         uint256 _amountOfFIFCoinForAuthor = ((2128623629 * 10 ** 9) * voucher.winnerReward) / 10 ** 20; //  2.128623629 % BMMM3SC Author
         uint256 _amountOfFIFCoinForTreasury = ((2461179748 * 10 ** 9) * voucher.winnerReward) / 10 ** 20; //  2.461179748 % BMMM3SC Treasury
         uint256 _amountOfFIFCoinForWinner = ((91803398874 * 10 ** 9) * voucher.winnerReward) / 10 ** 20; // 91.803398874 % BMMM3SC Sender
