@@ -48,7 +48,6 @@ describe("Find It First Smart Contract Test", () => {
         await fifVRFCoordinatorV2_5Mock.createSubscription()
         filter = fifVRFCoordinatorV2_5Mock.filters.SubscriptionCreated
         events = await fifVRFCoordinatorV2_5Mock.queryFilter(filter, 1)
-
         const subId = events[0].args[0];
         
         await fifVRFCoordinatorV2_5Mock.fundSubscription(subId, ethers.parseEther('1'))
@@ -87,18 +86,20 @@ describe("Find It First Smart Contract Test", () => {
         await fif.connect(player2).mintTickets(ethers.parseEther('1'))
         DEBUG?console.log(`FIF Tickets minted by P1        (balance: ${await fifTicket.balanceOf(player1.address)}) and P2 (  balance: ${await fifTicket.balanceOf(player2.address)}) to FIF Token`, `at ${(new Error().stack).match(re_getFileLine)}`):null
       
+    });
 
+    it("It should redeem a voucher", async () => {
         // TODO make use of permit functionality to avoid approve gas consupmtion 
         await fifTicket.connect(player1).approve(fif.target, ethers.parseEther('1'))
         await fifTicket.connect(player2).approve(fif.target, ethers.parseEther('1'))
         DEBUG?console.log(`FIF Tickets approved by P1    (allowance: ${await fifTicket.allowance(player1.address, fif.target)}) and P2 (allowance: ${await fifTicket.allowance(player2.address, fif.target)}) to FIF GAME`, `at ${(new Error().stack).match(re_getFileLine)}`):null
 
-      
+
         await fif.connect(player1).startGameMatch(ethers.parseEther('1'))
         await fif.connect(player2).startGameMatch(ethers.parseEther('1'))
         DEBUG?console.log(`FIF Tickets balance by P1 (balance: ${await fifTicket.balanceOf(player1.address)}) and P2 (balance: ${await fifTicket.balanceOf(player2.address)}) after spent tickets on FIF GAME`, `at ${(new Error().stack).match(re_getFileLine)}`):null
 
-        filter = fif.filters.GameMatchInitiated
+        filter = fif.filters.GameMatchRequested
         events = await fif.queryFilter(filter, 2)
 
         const eventP1 = events[0].args
@@ -106,10 +107,7 @@ describe("Find It First Smart Contract Test", () => {
 
         console.log(eventP1)
         console.log(eventP2)
-    
-    });
-
-    it("It should redeem a voucher", async () => {
+ 
         const voucherMaker = new VoucherMaker({ contract: fif, signer: owner })
         let voucherID = 1,
         winnerReward = ethers.parseEther('2'), 
@@ -125,6 +123,25 @@ describe("Find It First Smart Contract Test", () => {
     })
 
     it("Should fail to redeem a Reward that's already been claimed", async function () {
+        // TODO make use of permit functionality to avoid approve gas consupmtion 
+        await fifTicket.connect(player1).approve(fif.target, ethers.parseEther('1'))
+        await fifTicket.connect(player2).approve(fif.target, ethers.parseEther('1'))
+        DEBUG?console.log(`FIF Tickets approved by P1    (allowance: ${await fifTicket.allowance(player1.address, fif.target)}) and P2 (allowance: ${await fifTicket.allowance(player2.address, fif.target)}) to FIF GAME`, `at ${(new Error().stack).match(re_getFileLine)}`):null
+
+      
+        await fif.connect(player1).startGameMatch(ethers.parseEther('1'))
+        await fif.connect(player2).startGameMatch(ethers.parseEther('1'))
+        DEBUG?console.log(`FIF Tickets balance by P1 (balance: ${await fifTicket.balanceOf(player1.address)}) and P2 (balance: ${await fifTicket.balanceOf(player2.address)}) after spent tickets on FIF GAME`, `at ${(new Error().stack).match(re_getFileLine)}`):null
+
+        filter = fif.filters.GameMatchRequested
+        events = await fif.queryFilter(filter, 2)
+
+        const eventP1 = events[0].args
+        const eventP2 = events[1].args
+
+        console.log(eventP1)
+        console.log(eventP2)
+        
         const voucherMaker = new VoucherMaker({ contract: fif, signer: owner })
         let voucherID = 1,
         winnerReward = 31, 

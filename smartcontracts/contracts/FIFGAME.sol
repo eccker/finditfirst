@@ -170,6 +170,8 @@ contract FIFGameHS is EIP712, AccessControl,  VRFConsumerBaseV2Plus {
         require(vouchers[voucher.voucherId] != true, "Voucher spent");
 
         vouchers[voucher.voucherId] = true;
+
+        require(highScorePool >= voucher.winnerReward, "not enough in pool");
         highScorePool -= voucher.winnerReward;
         
         // partition the Reward to cover FIF fee
