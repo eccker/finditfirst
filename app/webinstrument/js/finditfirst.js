@@ -1,4 +1,5 @@
 let sketch = (p) => {
+    const INITIAL_DIFFICULTY = 16
     let now = 0
     let lastGeneratedTime = 0
     let canvasApp
@@ -18,7 +19,7 @@ let sketch = (p) => {
     let bufferDeckData = []
     let bufferDeckImgs = []
 
-    let difficulty = 16
+    let difficulty = INITIAL_DIFFICULTY
     let shuffles = 0
 
     let draw_allowed;
@@ -207,7 +208,7 @@ let sketch = (p) => {
         bottomDeck = new card(gridSpaceX * 3, gridSpaceY * 18)
         bottomDeck.initCards(p, cropAndResizeImage)
 
-        difficulty = 2
+        difficulty = INITIAL_DIFFICULTY
         encodeSendJWTRequestBuffer(difficulty, channel)
 
         someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * ranTime) + minTime)
@@ -415,7 +416,7 @@ let sketch = (p) => {
     p.doubleClicked = () => {
         if (gameStatus === `lose`) {
             gameStatus = `ready`
-            difficulty = 2
+            difficulty = INITIAL_DIFFICULTY
             minTime = 12.0
             ranTime = 68.0
             shuffles = 0
@@ -441,7 +442,7 @@ let sketch = (p) => {
         if (p.key === 'r') {
             if (gameStatus === `lose`) {
                 gameStatus = `ready`
-                difficulty = 2
+                difficulty = INITIAL_DIFFICULTY
                 minTime = 12.0
                 ranTime = 68.0
                 shuffles = 0

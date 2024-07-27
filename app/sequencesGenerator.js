@@ -61,46 +61,13 @@ function generateSeries(L, M) {
   return series;
 }
 
-// Validation function to check the generated series
-function validateSeries(series) {
-    for (let i = 0; i < series.length; i++) {
-      const singleSeries = series[i];
-      
-      // Check that each series has exactly 12 numbers
-      if (singleSeries.length !== 12) {
-        return `Series ${i + 1} does not have exactly 12 numbers.`;
-      }
-  
-      const firstHalf = singleSeries.slice(0, 6);
-      const secondHalf = singleSeries.slice(6, 12);
-  
-      // Check that first 6 numbers are unique
-      if (new Set(firstHalf).size !== 6) {
-        return `First 6 numbers in series ${i + 1} are not unique.`;
-      }
-  
-      // Check that last 6 numbers are unique
-      if (new Set(secondHalf).size !== 6) {
-        return `Last 6 numbers in series ${i + 1} are not unique.`;
-      }
-  
-      // Check for at least one matching number between the first 6 and last 6 numbers
-      const firstHalfSet = new Set(firstHalf);
-      const matchFound = secondHalf.some(num => firstHalfSet.has(num));
-  
-      if (!matchFound) {
-        return `No matching number found between the first 6 and last 6 numbers in series ${i + 1}.`;
-      }
-    }
-    
-    return "All series meet the specifications and requirements.";
-}
-
+let match = []
 const maxLevel = 256
 for (let index = 12; index < maxLevel; index++) {
-    const L = Array.from({ length: index }, (_, i) => i + 1); // List L of 100 elements from 1 to 100
+    const L = Array.from({ length: index }, (_, i) => i + 1); 
     const M = 100; // Number of series to generate
-    // Example usage with generated series
     const generatedSeries = generateSeries(L,M)
-    console.log(generatedSeries.length)
-  }
+    match.push(generatedSeries)
+}
+console.log(match.length)
+console.log(match[0][0][0])
