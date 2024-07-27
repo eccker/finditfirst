@@ -34,7 +34,7 @@ contract FIFTicket is ERC20, ERC20Burnable, ERC20Pausable, AccessControl, ERC20P
     }
 
         // Override the burn function to provide custom logic if needed
-    function burn(uint256 amount) public virtual override {
+    function burn(uint256 amount) public virtual override onlyRole(MINTER_ROLE) {
         super.burn(amount);
         // Add custom logic here after burning tokens, if necessary
         // TODO make burn only possible to FIFGameHS contract

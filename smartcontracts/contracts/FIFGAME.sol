@@ -38,13 +38,8 @@ interface IFIFTicket {
 }
 
 contract FIFGameHS is EIP712, AccessControl,  VRFConsumerBaseV2Plus {
-    
-uint256 s_subscriptionId;
-address vrfCoordinator = 0x343300b5d84D444B2ADc9116FEF1bED02BE49Cf2;
-bytes32 s_keyHash = 0x816bedba8a50b294e5cbd47842baf240c2385f2eaf719edbd4f250a137a8c899;
-uint32 callbackGasLimit = 40000;
-uint16 requestConfirmations = 3;
-uint32 numWords =  256;
+    uint256 private s_subscriptionId;
+    bytes32 s_keyHash = 0x816bedba8a50b294e5cbd47842baf240c2385f2eaf719edbd4f250a137a8c899;
 
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     string private constant SIGNING_DOMAIN = "FIND-IT-FIRST";
@@ -53,24 +48,13 @@ uint32 numWords =  256;
     IERC20 public fifToken; // Standard ERC-20 Token
     IFIFTicket public fifTicket; // Internal ERC-20 Token (Ticket)
 
-    // mapping(address => uint256) public balances; // Saldo de tokens de cada jugador
     mapping(uint256 => bool) public vouchers; // Indica si un jugador tiene un voucher
-    // mapping(address => bool) public canPlay; // Indica si un jugador puede jugar porque ya pagó
-
-     uint32 constant CALLBACK_GAS_LIMIT = 100000;
-
-    // The default is 3, but you can set this higher.
-    uint16 constant REQUEST_CONFIRMATIONS = 3;
-
-    // For this example, retrieve 2 random values in one request.
-    // Cannot exceed VRFCoordinatorV2_5.MAX_NUM_WORDS.
-    uint32 constant NUM_WORDS = 100;
-
-    uint256[] public s_randomWords;
-    uint256 public s_requestId;
-
     mapping(uint256 => address) private s_players;
     mapping(address => uint256) private s_results;
+    
+    uint32 constant CALLBACK_GAS_LIMIT = 100000;
+    uint16 constant REQUEST_CONFIRMATIONS = 3;
+    uint32 constant NUM_WORDS = 100;
 
 
     address public AUTHOR_ADDRESS = 0x090Ec11314d4BD31B536F52472d2E6A1D4771220;
@@ -80,6 +64,10 @@ uint32 numWords =  256;
     address public ARTISTS_ADDRESS = 0x2696b670D795e3B524880402C67b1ACCe6C1860f;
     uint256 public TOKEN_TO_TICKET_RATE = 1 ether;
     
+    uint256[] public s_randomWords;
+    uint256 public s_requestId;
+    uint256 public highScorePool = 0;
+
     struct WinnerVoucher {
         uint256 voucherId;
         uint256 winnerReward;
@@ -91,8 +79,7 @@ uint32 numWords =  256;
     event TransferTokens(address indexed player, uint256 amount);
     event GameMatchStarted(address indexed player, uint256 indexed requestId, uint256 randomNumbers);
     event RewardRedeemed(address indexed player, uint256 amount);
-    event GameMatchInitiated(address indexed player, uint256 indexed betAmount, uint256 indexed requestId);
-
+    event GameMatchRequested(address indexed player, uint256 indexed betAmount, uint256 indexed requestId);
 
     constructor(uint256 subscriptionId, address _vrfCoordinator) VRFConsumerBaseV2Plus(_vrfCoordinator) EIP712(SIGNING_DOMAIN, SIGNATURE_VERSION) {
         s_subscriptionId = subscriptionId;
@@ -141,7 +128,7 @@ uint32 numWords =  256;
         );
         fifTicket.burn(_ticketsToBet);
 
-        
+        highScorePool += _ticketsToBet;
 
         s_requestId = s_vrfCoordinator.requestRandomWords(
             VRFV2PlusClient.RandomWordsRequest({
@@ -159,8 +146,9 @@ uint32 numWords =  256;
         s_players[s_requestId] = msg.sender;
         s_results[msg.sender] = 1;
         
-        // TODO: request a random number (chainlink) and event emit the requestId and assign it to sender
-        emit GameMatchInitiated(msg.sender, _ticketsToBet, s_requestId);
+        // request a random number (chainlink) and 
+        // event emit the sender, bet and requestId
+        emit GameMatchRequested(msg.sender, _ticketsToBet, s_requestId);
         DEBUG?console.log("SC ::: END of startGameMatch"):();
     }
 
@@ -183,7 +171,10 @@ uint32 numWords =  256;
 
         vouchers[voucher.voucherId] = true;
 
-        // TODO partition the Reward to cover FIF fee
+        require(highScorePool >= voucher.winnerReward, "not enough in pool");
+        highScorePool -= voucher.winnerReward;
+        
+        // partition the Reward to cover FIF fee
         uint256 _amountOfFIFCoinForAuthor = ((2128623629 * 10 ** 9) * voucher.winnerReward) / 10 ** 20; //  2.128623629 % BMMM3SC Author
         uint256 _amountOfFIFCoinForTreasury = ((2461179748 * 10 ** 9) * voucher.winnerReward) / 10 ** 20; //  2.461179748 % BMMM3SC Treasury
         uint256 _amountOfFIFCoinForWinner = ((91803398874 * 10 ** 9) * voucher.winnerReward) / 10 ** 20; // 91.803398874 % BMMM3SC Sender
