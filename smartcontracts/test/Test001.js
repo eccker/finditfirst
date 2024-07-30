@@ -32,6 +32,8 @@ describe("Find It First Smart Contract Test", () => {
     let player2
     let userRandom
     let fifVRFCoordinatorV2_5Mock
+    let fifTokenPlayer1InitialBalance
+    let fifTokenPlayer2InitialBalance
     beforeEach(async function () {
         [owner, player1, player2, userRandom] = await ethers.getSigners();
         DEBUG?console.log(`\r\nowner address: ${owner.address},\r\np1    address: ${player1.address}, \r\np2    address: ${player2.address}`, `at ${(new Error().stack).match(re_getFileLine)}`):null
@@ -50,7 +52,7 @@ describe("Find It First Smart Contract Test", () => {
         events = await fifVRFCoordinatorV2_5Mock.queryFilter(filter, 1)
         const subId = events[0].args[0];
         
-        await fifVRFCoordinatorV2_5Mock.fundSubscription(subId, ethers.parseEther('1'))
+        await fifVRFCoordinatorV2_5Mock.fundSubscription(subId, ethers.parseEther('100'))
         DEBUG?console.log(`fundSubscription completed`, `at ${(new Error().stack).match(re_getFileLine)}`):null
 
         fif = await ethers.deployContract("FIFGameHS", [subId, fifVRFCoordinatorV2_5Mock.target], owner);
@@ -63,60 +65,63 @@ describe("Find It First Smart Contract Test", () => {
         
         await fif.connect(owner).setTokenAndTicketAddress(fifToken.target, fifTicket.target)
 
-        await usdTokenTest.connect(owner).transfer(player1.address, ethers.parseEther('1'))
-        await usdTokenTest.connect(owner).transfer(player2.address, ethers.parseEther('1'))
+        await usdTokenTest.connect(owner).transfer(player1.address, ethers.parseEther('1000'))
+        await usdTokenTest.connect(owner).transfer(player2.address, ethers.parseEther('1000'))
         DEBUG?console.log(`USDTT transfer from owner to P1 (balance: ${await usdTokenTest.balanceOf(player1.address)}) and P2 (  balance: ${await usdTokenTest.balanceOf(player2.address)})`, `at ${(new Error().stack).match(re_getFileLine)}`):null
         
-        await usdTokenTest.connect(player1).approve(fifToken.target, ethers.parseEther('1'))
-        await usdTokenTest.connect(player2).approve(fifToken.target, ethers.parseEther('1'))
+        await usdTokenTest.connect(player1).approve(fifToken.target, ethers.parseEther('365'))
+        await usdTokenTest.connect(player2).approve(fifToken.target, ethers.parseEther('100'))
         DEBUG?console.log(`USDTT approved from P1        (allowance: ${await usdTokenTest.allowance(player1.address, fifToken.target)}) and P2 (allowance: ${await usdTokenTest.allowance(player2.address, fifToken.target)}) to FIF Token`, `at ${(new Error().stack).match(re_getFileLine)}`):null
         
-        await fifToken.connect(player1).mint(player1.address, ethers.parseEther('1'));
-        await fifToken.connect(player2).mint(player2.address, ethers.parseEther('1'));
+        await fifToken.connect(player1).mint(player1.address, ethers.parseEther('150'));
+        await fifToken.connect(player2).mint(player2.address, ethers.parseEther('80'));
+        fifTokenPlayer1InitialBalance = await fifToken.balanceOf(player1.address)
+        fifTokenPlayer2InitialBalance = await fifToken.balanceOf(player2.address)
+        
+
         DEBUG?console.log(`FIF Token minted by P1          (balance: ${await fifToken.balanceOf(player1.address)}) and P2 (  balance: ${await fifToken.balanceOf(player2.address)}) to FIF Token`, `at ${(new Error().stack).match(re_getFileLine)}`):null
 
 
-        await fifToken.connect(player1).approve(fif.target, ethers.parseEther('1'))
-        await fifToken.connect(player2).approve(fif.target, ethers.parseEther('1'))
+        await fifToken.connect(player1).approve(fif.target, ethers.parseEther('50'))
+        await fifToken.connect(player2).approve(fif.target, ethers.parseEther('50'))
         DEBUG?console.log(`FIF Token approved from P1    (allowance: ${await fifToken.allowance(player1.address, fif.target)}) and P2 (allowance: ${await fifToken.allowance(player2.address, fif.target)}) to FIF Token`, `at ${(new Error().stack).match(re_getFileLine)}`):null
 
         // Generate a random deadline for the permit
         const deadline = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
     
+        const { v, r, s } = await getPermitSignature(
+            player1,
+            fifToken,
+            fif.target,
+            ethers.parseEther("50"),
+            deadline
+        );
 
-const { v, r, s } = await getPermitSignature(
-    player1,
-    fifToken,
-    fif.target,
-    ethers.parseEther("1"),
-    deadline
-);
+        const { v: v2, r: r2, s: s2 } = await getPermitSignature(
+            player2,
+            fifToken,
+            fif.target,
+            ethers.parseEther("50"),
+            deadline
+        );
 
-const { v: v2, r: r2, s: s2 } = await getPermitSignature(
-    player2,
-    fifToken,
-    fif.target,
-    ethers.parseEther("1"),
-    deadline
-);
+        DEBUG?console.log(`FIF Token signature v, r, s returned`, `at ${(new Error().stack).match(re_getFileLine)}`):null
+        // Call the mintTickets function with the permit signature
+        await fif.connect(player1).mintTickets(
+        ethers.parseEther('50'),
+        deadline,
+        r,
+        s,
+        v
+        );
 
-DEBUG?console.log(`FIF Token signature v, r, s returned`, `at ${(new Error().stack).match(re_getFileLine)}`):null
-// Call the mintTickets function with the permit signature
-await fif.connect(player1).mintTickets(
-  ethers.parseEther('1'),
-  deadline,
-  r,
-  s,
-  v
-);
-
-await fif.connect(player2).mintTickets(
-    ethers.parseEther('1'),
-    deadline,
-    r2,
-    s2,
-    v2
-  );
+        await fif.connect(player2).mintTickets(
+            ethers.parseEther('50'),
+            deadline,
+            r2,
+            s2,
+            v2
+        );
 
 
         
@@ -134,8 +139,8 @@ await fif.connect(player2).mintTickets(
         // DEBUG?console.log(`FIF Tickets approved by P1    (allowance: ${await fifTicket.allowance(player1.address, fif.target)}) and P2 (allowance: ${await fifTicket.allowance(player2.address, fif.target)}) to FIF GAME`, `at ${(new Error().stack).match(re_getFileLine)}`):null
 
 
-        await fif.connect(player1).requestGameMatch(ethers.parseEther('1'))
-        await fif.connect(player2).requestGameMatch(ethers.parseEther('1'))
+        await fif.connect(player1).requestGameMatch(ethers.parseEther('50'))
+        await fif.connect(player2).requestGameMatch(ethers.parseEther('50'))
         DEBUG?console.log(`FIF Tickets requestGameMatch`, `at ${(new Error().stack).match(re_getFileLine)}`):null
         // DEBUG?console.log(`FIF Tickets balance by P1 (balance: ${await fifTicket.balanceOf(player1.address)}) and P2 (balance: ${await fifTicket.balanceOf(player2.address)}) after spent tickets on FIF GAME`, `at ${(new Error().stack).match(re_getFileLine)}`):null
 
@@ -150,16 +155,25 @@ await fif.connect(player2).mintTickets(
  
         const voucherMaker = new VoucherMaker({ contract: fif, signer: owner })
         let voucherID = 1,
-        winnerReward = ethers.parseEther('2'), 
-        winnerBet = ethers.parseEther('1'), 
+        winnerReward = ethers.parseEther('100'), 
+        winnerBet = ethers.parseEther('50'), 
         winnerAddress =  `${player1.address}`
  
         const voucher = await voucherMaker.createVoucher(voucherID, winnerReward, winnerBet, winnerAddress)
         DEBUG?console.log("point 5"):null
         
         expect(await fif.redeem(voucher))
-        .to.emit(fif, 'RewardRedeemed')  // transfer from null address to minter
+        .to.emit(fif, 'RewardRedeemed') 
         .withArgs(voucher.winnerAddress, voucher.winnerReward)
+
+        const expectedBalanceP1 = BigInt(fifTokenPlayer1InitialBalance) 
+                                - ethers.parseEther("50") 
+                                + (BigInt(voucher.winnerReward) * BigInt(81390000000)) / BigInt(100000000000);
+
+        const expectedBalanceP2 = fifTokenPlayer2InitialBalance - BigInt(winnerBet);
+
+        expect(await fifToken.balanceOf(player1.address)).to.equal(expectedBalanceP1);
+        expect(await fifToken.balanceOf(player2.address)).to.equal(expectedBalanceP2);
         
     })
 
