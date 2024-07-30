@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 pragma abicoder v2; // required to accept structs as function parameters
 
 import "hardhat/console.sol";
-bool constant DEBUG = false;
+bool constant DEBUG = true;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
@@ -51,6 +51,7 @@ contract FIFGameHS is EIP712, AccessControl,  VRFConsumerBaseV2Plus {
     mapping(uint256 => bool) public vouchers; // Indica si un jugador tiene un voucher
     mapping(uint256 => address) private s_players;
     mapping(address => uint256) private s_results;
+    mapping(address => uint256) private s_ticket_players_balance;
     
     uint32 constant CALLBACK_GAS_LIMIT = 100000;
     uint16 constant REQUEST_CONFIRMATIONS = 3;
@@ -61,7 +62,7 @@ contract FIFGameHS is EIP712, AccessControl,  VRFConsumerBaseV2Plus {
     address public DAO_TREASURY_ADDRESS = 0x88c7CE98b4924c7eA58F160D3A128e0592ECB053;
     address public DAO_FUND_ADDRESS = 0x2696b670D795e3B524880402C67b1ACCe6C1860f;
     address public DEVELOPER_ADDRESS = 0x2696b670D795e3B524880402C67b1ACCe6C1860f;
-    address public ARTISTS_ADDRESS = 0x2696b670D795e3B524880402C67b1ACCe6C1860f;
+    address public CONTENT_CREATORS_ADDRESS = 0x2696b670D795e3B524880402C67b1ACCe6C1860f;
     uint256 public TOKEN_TO_TICKET_RATE = 1 ether;
     
     uint256[] public s_randomWords;
@@ -95,41 +96,71 @@ contract FIFGameHS is EIP712, AccessControl,  VRFConsumerBaseV2Plus {
         TOKEN_TO_TICKET_RATE = rate;
     }
 
-    function mintTickets(uint256 amount) external {//  function to mint Tickets from Tokens
+    function mintTickets(
+        uint256 amount,
+        uint256 deadline,
+        bytes32 r,
+        bytes32 s,
+        uint8 v
+    )external {//  function to mint Tickets from Tokens
         require(
             amount % TOKEN_TO_TICKET_RATE == 0,
             "Must send a multiple of the T2TR"
         );
 
-        require(
-            fifToken.transferFrom(msg.sender, address(this), amount),
-            "Error en la transferencia"
+        // Get the permit signature
+    (bool success, ) = address(fifToken).call(
+        abi.encodeWithSignature(
+            "permit(address,address,uint256,uint256,uint8,bytes32,bytes32)",
+            msg.sender,
+            address(this),
+            amount,
+            deadline,
+            v,
+            r,
+            s
+        )
+    );
+
+    require(
+            fifToken.transferFrom(
+                msg.sender,
+                address(this),
+                amount
+            ),
+            "Token transfer failed"
         );
 
-        fifTicket.mint(msg.sender, amount);
-        // TODO prevent ticket withdraw
-        // TODO prevent ticket transfer
+    require(success, "Error in permit");
+
+        // prevent ticket withdraw and transfer by be owned by FIFGameHS
+        // mint it to this smart contract address 
+        fifTicket.mint(address(this), amount);
+
+        // associate msg.sender with amount 
+        s_ticket_players_balance[msg.sender] += amount;
+
         DEBUG?console.log("SC ::: FIFTicket minted: mintTickets", msg.sender, amount): ();
 
     }
 
-    function startGameMatch(uint256 _ticketsToBet) external {
-
-
-        DEBUG?console.log("SC ::: START: startGameMatch", msg.sender):();
+    function requestGameMatch(uint256 _ticketsToBet) external {
+        DEBUG?console.log("SC ::: START: requestGameMatch", msg.sender):();
         require(
             _ticketsToBet % 1 ether == 0,
             "Must send a multiple of the T2TR"
         );
 
         require(
-            fifTicket.transferFrom(msg.sender, address(this), _ticketsToBet),
-            "Error en la transferencia"
+            s_ticket_players_balance[msg.sender] >= _ticketsToBet,
+            "Not enough tickets to bet"
         );
+        s_ticket_players_balance[msg.sender] -= _ticketsToBet;
         fifTicket.burn(_ticketsToBet);
 
         highScorePool += _ticketsToBet;
 
+        // request a random number (chainlink)
         s_requestId = s_vrfCoordinator.requestRandomWords(
             VRFV2PlusClient.RandomWordsRequest({
                 keyHash: s_keyHash,
@@ -146,10 +177,9 @@ contract FIFGameHS is EIP712, AccessControl,  VRFConsumerBaseV2Plus {
         s_players[s_requestId] = msg.sender;
         s_results[msg.sender] = 1;
         
-        // request a random number (chainlink) and 
         // event emit the sender, bet and requestId
         emit GameMatchRequested(msg.sender, _ticketsToBet, s_requestId);
-        DEBUG?console.log("SC ::: END of startGameMatch"):();
+        DEBUG?console.log("SC ::: END of requestGameMatch"):();
     }
 
     function fulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) internal override {
@@ -173,24 +203,21 @@ contract FIFGameHS is EIP712, AccessControl,  VRFConsumerBaseV2Plus {
 
         require(highScorePool >= voucher.winnerReward, "not enough in pool");
         highScorePool -= voucher.winnerReward;
-        
-        // partition the Reward to cover FIF fee
-        uint256 _amountOfFIFCoinForAuthor = ((2128623629 * 10 ** 9) * voucher.winnerReward) / 10 ** 20; //  2.128623629 % BMMM3SC Author
-        uint256 _amountOfFIFCoinForTreasury = ((2461179748 * 10 ** 9) * voucher.winnerReward) / 10 ** 20; //  2.461179748 % BMMM3SC Treasury
-        uint256 _amountOfFIFCoinForWinner = ((91803398874 * 10 ** 9) * voucher.winnerReward) / 10 ** 20; // 91.803398874 % BMMM3SC Sender
-        uint256 _amountOfFIFCoinForDAO = ((3606797749 * 10 ** 9) * voucher.winnerReward) / 10 ** 20; //  3.606797749 % BMMM3SC DAO
+      
+        uint256 _amountOfFIFCoinForWinner          = (81390000000 * voucher.winnerReward) / 100000000000;
+        uint256 _amountOfFIFCoinForAuthor          = ( 1618000000 * voucher.winnerReward) / 100000000000;
+        uint256 _amountOfFIFCoinForDAO             = ( 4854000000 * voucher.winnerReward) / 100000000000;
+        uint256 _amountOfFIFCoinForTreasury        = ( 6472000000 * voucher.winnerReward) / 100000000000;
+        uint256 _amountOfFIFCoinForDevelopers      = ( 3236000000 * voucher.winnerReward) / 100000000000;
+        uint256 _amountOfFIFCoinForContentCreators = ( 2430000000 * voucher.winnerReward) / 100000000000;
 
-        fifToken.approve(AUTHOR_ADDRESS, _amountOfFIFCoinForAuthor); //42572472580000000
-        fifToken.transfer(AUTHOR_ADDRESS, _amountOfFIFCoinForAuthor);
+        fifToken.transfer(AUTHOR_ADDRESS,                                   _amountOfFIFCoinForAuthor);
+        fifToken.transfer(DAO_TREASURY_ADDRESS,                             _amountOfFIFCoinForTreasury);
+        fifToken.transfer(DAO_FUND_ADDRESS,                                 _amountOfFIFCoinForDAO);
+        fifToken.transfer(DEVELOPER_ADDRESS,                                _amountOfFIFCoinForDevelopers);
+        fifToken.transfer(CONTENT_CREATORS_ADDRESS,                         _amountOfFIFCoinForContentCreators);
+        fifToken.transfer(address(stringToAddress(voucher.winnerAddress)),  _amountOfFIFCoinForWinner);
 
-        fifToken.approve(DAO_TREASURY_ADDRESS, _amountOfFIFCoinForTreasury);
-        fifToken.transfer(DAO_TREASURY_ADDRESS, _amountOfFIFCoinForTreasury);
-
-        fifToken.approve(DAO_FUND_ADDRESS, _amountOfFIFCoinForDAO);
-        fifToken.transfer(DAO_FUND_ADDRESS, _amountOfFIFCoinForDAO);
-
-        fifToken.approve(stringToAddress(voucher.winnerAddress), _amountOfFIFCoinForWinner);
-        fifToken.transfer(address(stringToAddress(voucher.winnerAddress)), _amountOfFIFCoinForWinner);
         emit RewardRedeemed(stringToAddress(voucher.winnerAddress), _amountOfFIFCoinForWinner);
     }
 
