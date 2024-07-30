@@ -1,4 +1,5 @@
 let sketch = (p) => {
+    const INITIAL_DIFFICULTY = 16
     let now = 0
     let lastGeneratedTime = 0
     let canvasApp
@@ -18,7 +19,7 @@ let sketch = (p) => {
     let bufferDeckData = []
     let bufferDeckImgs = []
 
-    let difficulty = 16
+    let difficulty = INITIAL_DIFFICULTY
     let shuffles = 0
 
     let draw_allowed;
@@ -183,18 +184,12 @@ let sketch = (p) => {
                     bufferDeckData.shift()
                     bufferDeckImgs.shift()
                 }
-
                 p.loadImage(data.urls.thumb, _img => {
-
-
                     if (p.windowWidth > p.windowHeight) {
-
                         bufferDeckImgs.push(cropAndResizeImage(_img, gridSpaceX * 6, gridSpaceY * 6))
                     } else {
-
                         bufferDeckImgs.push(cropAndResizeImage(_img, gridSpaceX * 6, gridSpaceY * 6))
                     }
-
                     bufferDeckData.push(data)
                 })
             }
@@ -207,7 +202,7 @@ let sketch = (p) => {
         bottomDeck = new card(gridSpaceX * 3, gridSpaceY * 18)
         bottomDeck.initCards(p, cropAndResizeImage)
 
-        difficulty = 2
+        difficulty = INITIAL_DIFFICULTY
         encodeSendJWTRequestBuffer(difficulty, channel)
 
         someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * ranTime) + minTime)
@@ -239,7 +234,6 @@ let sketch = (p) => {
                 }
             }
         })
-
     }
 
     p.windowResized = () => {
@@ -381,7 +375,6 @@ let sketch = (p) => {
                 someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * ranTime) + minTime)
                 tempcol = "#" + makeHexString(6)
 
-
                 for (let index = 0; index < 6; index++) {
                     if (topDeck.imgs.length > 5) {
                         topDeck.imgs = []
@@ -405,8 +398,6 @@ let sketch = (p) => {
                     gameStatus = `lose`
                     encodeSendJWTRequestBuffer(difficulty, channel)
                 }
-
-
                 p.background(10, 10, 10, 251)
             }
         }
@@ -415,7 +406,7 @@ let sketch = (p) => {
     p.doubleClicked = () => {
         if (gameStatus === `lose`) {
             gameStatus = `ready`
-            difficulty = 2
+            difficulty = INITIAL_DIFFICULTY
             minTime = 12.0
             ranTime = 68.0
             shuffles = 0
@@ -441,7 +432,7 @@ let sketch = (p) => {
         if (p.key === 'r') {
             if (gameStatus === `lose`) {
                 gameStatus = `ready`
-                difficulty = 2
+                difficulty = INITIAL_DIFFICULTY
                 minTime = 12.0
                 ranTime = 68.0
                 shuffles = 0
