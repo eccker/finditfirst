@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 pragma abicoder v2; // required to accept structs as function parameters
 
 import "hardhat/console.sol";
-bool constant DEBUG = false;
+bool constant DEBUG = true;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
@@ -96,16 +96,42 @@ contract FIFGameHS is EIP712, AccessControl,  VRFConsumerBaseV2Plus {
         TOKEN_TO_TICKET_RATE = rate;
     }
 
-    function mintTickets(uint256 amount) external {//  function to mint Tickets from Tokens
+    function mintTickets(
+        uint256 amount,
+        uint256 deadline,
+        bytes32 r,
+        bytes32 s,
+        uint8 v
+    )external {//  function to mint Tickets from Tokens
         require(
             amount % TOKEN_TO_TICKET_RATE == 0,
             "Must send a multiple of the T2TR"
         );
 
-        require(
-            fifToken.transferFrom(msg.sender, address(this), amount),
-            "Error en la transferencia"
+        // Get the permit signature
+    (bool success, ) = address(fifToken).call(
+        abi.encodeWithSignature(
+            "permit(address,address,uint256,uint256,uint8,bytes32,bytes32)",
+            msg.sender,
+            address(this),
+            amount,
+            deadline,
+            v,
+            r,
+            s
+        )
+    );
+
+    require(
+            fifToken.transferFrom(
+                msg.sender,
+                address(this),
+                amount
+            ),
+            "Token transfer failed"
         );
+
+    require(success, "Error in permit");
 
         // prevent ticket withdraw and transfer by be owned by FIFGameHS
         // mint it to this smart contract address 

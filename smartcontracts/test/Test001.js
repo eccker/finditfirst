@@ -80,24 +80,64 @@ describe("Find It First Smart Contract Test", () => {
         await fifToken.connect(player2).approve(fif.target, ethers.parseEther('1'))
         DEBUG?console.log(`FIF Token approved from P1    (allowance: ${await fifToken.allowance(player1.address, fif.target)}) and P2 (allowance: ${await fifToken.allowance(player2.address, fif.target)}) to FIF Token`, `at ${(new Error().stack).match(re_getFileLine)}`):null
 
-   
+        // Generate a random deadline for the permit
+        const deadline = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
+    
+
+const { v, r, s } = await getPermitSignature(
+    player1,
+    fifToken,
+    fif.target,
+    ethers.parseEther("1"),
+    deadline
+);
+
+const { v: v2, r: r2, s: s2 } = await getPermitSignature(
+    player2,
+    fifToken,
+    fif.target,
+    ethers.parseEther("1"),
+    deadline
+);
+
+DEBUG?console.log(`FIF Token signature v, r, s returned`, `at ${(new Error().stack).match(re_getFileLine)}`):null
+// Call the mintTickets function with the permit signature
+await fif.connect(player1).mintTickets(
+  ethers.parseEther('1'),
+  deadline,
+  r,
+  s,
+  v
+);
+
+await fif.connect(player2).mintTickets(
+    ethers.parseEther('1'),
+    deadline,
+    r2,
+    s2,
+    v2
+  );
+
+
+        
         // FIFGameHS contract is the only one who can mint tickets to players
-        await fif.connect(player1).mintTickets(ethers.parseEther('1'))
-        await fif.connect(player2).mintTickets(ethers.parseEther('1'))
-        DEBUG?console.log(`FIF Tickets minted by P1        (balance: ${await fifTicket.balanceOf(player1.address)}) and P2 (  balance: ${await fifTicket.balanceOf(player2.address)}) to FIF Token`, `at ${(new Error().stack).match(re_getFileLine)}`):null
+        // await fif.connect(player1).mintTickets(ethers.parseEther('1'))
+        // await fif.connect(player2).mintTickets(ethers.parseEther('1'))
+        // DEBUG?console.log(`FIF Tickets minted by P1        (balance: ${await fifTicket.balanceOf(player1.address)}) and P2 (  balance: ${await fifTicket.balanceOf(player2.address)}) to FIF Token`, `at ${(new Error().stack).match(re_getFileLine)}`):null
       
     });
 
     it("It should redeem a voucher", async () => {
         // TODO make use of permit functionality to avoid approve gas consupmtion 
-        await fifTicket.connect(player1).approve(fif.target, ethers.parseEther('1'))
-        await fifTicket.connect(player2).approve(fif.target, ethers.parseEther('1'))
-        DEBUG?console.log(`FIF Tickets approved by P1    (allowance: ${await fifTicket.allowance(player1.address, fif.target)}) and P2 (allowance: ${await fifTicket.allowance(player2.address, fif.target)}) to FIF GAME`, `at ${(new Error().stack).match(re_getFileLine)}`):null
+        // await fifTicket.connect(player1).approve(fif.target, ethers.parseEther('1'))
+        // await fifTicket.connect(player2).approve(fif.target, ethers.parseEther('1'))
+        // DEBUG?console.log(`FIF Tickets approved by P1    (allowance: ${await fifTicket.allowance(player1.address, fif.target)}) and P2 (allowance: ${await fifTicket.allowance(player2.address, fif.target)}) to FIF GAME`, `at ${(new Error().stack).match(re_getFileLine)}`):null
 
 
         await fif.connect(player1).requestGameMatch(ethers.parseEther('1'))
         await fif.connect(player2).requestGameMatch(ethers.parseEther('1'))
-        DEBUG?console.log(`FIF Tickets balance by P1 (balance: ${await fifTicket.balanceOf(player1.address)}) and P2 (balance: ${await fifTicket.balanceOf(player2.address)}) after spent tickets on FIF GAME`, `at ${(new Error().stack).match(re_getFileLine)}`):null
+        DEBUG?console.log(`FIF Tickets requestGameMatch`, `at ${(new Error().stack).match(re_getFileLine)}`):null
+        // DEBUG?console.log(`FIF Tickets balance by P1 (balance: ${await fifTicket.balanceOf(player1.address)}) and P2 (balance: ${await fifTicket.balanceOf(player2.address)}) after spent tickets on FIF GAME`, `at ${(new Error().stack).match(re_getFileLine)}`):null
 
         filter = fif.filters.GameMatchRequested
         events = await fif.queryFilter(filter, 2)
@@ -120,6 +160,7 @@ describe("Find It First Smart Contract Test", () => {
         expect(await fif.redeem(voucher))
         .to.emit(fif, 'RewardRedeemed')  // transfer from null address to minter
         .withArgs(voucher.winnerAddress, voucher.winnerReward)
+        
     })
 
     it("Should fail to redeem a Reward that's already been claimed", async function () {
@@ -185,3 +226,40 @@ describe("Find It First Smart Contract Test", () => {
     // });
 
 });
+
+// Helper function to generate permit signature
+async function getPermitSignature(signer, token, spender, value, deadline) {
+    const [nonce, name, version, chainId] = await Promise.all([
+      token.nonces(signer.address),
+      token.name(),
+      "1",
+      signer.provider.getNetwork().then((n) => n.chainId),
+    ]);
+  
+    return ethers.Signature.from(
+      await signer.signTypedData(
+        {
+          name,
+          version,
+          chainId,
+          verifyingContract: await token.getAddress(),
+        },
+        {
+          Permit: [
+            { name: "owner", type: "address" },
+            { name: "spender", type: "address" },
+            { name: "value", type: "uint256" },
+            { name: "nonce", type: "uint256" },
+            { name: "deadline", type: "uint256" },
+          ],
+        },
+        {
+          owner: signer.address,
+          spender,
+          value,
+          nonce,
+          deadline,
+        }
+      )
+    );
+  }
