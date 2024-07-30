@@ -95,8 +95,8 @@ describe("Find It First Smart Contract Test", () => {
         DEBUG?console.log(`FIF Tickets approved by P1    (allowance: ${await fifTicket.allowance(player1.address, fif.target)}) and P2 (allowance: ${await fifTicket.allowance(player2.address, fif.target)}) to FIF GAME`, `at ${(new Error().stack).match(re_getFileLine)}`):null
 
 
-        await fif.connect(player1).startGameMatch(ethers.parseEther('1'))
-        await fif.connect(player2).startGameMatch(ethers.parseEther('1'))
+        await fif.connect(player1).requestGameMatch(ethers.parseEther('1'))
+        await fif.connect(player2).requestGameMatch(ethers.parseEther('1'))
         DEBUG?console.log(`FIF Tickets balance by P1 (balance: ${await fifTicket.balanceOf(player1.address)}) and P2 (balance: ${await fifTicket.balanceOf(player2.address)}) after spent tickets on FIF GAME`, `at ${(new Error().stack).match(re_getFileLine)}`):null
 
         filter = fif.filters.GameMatchRequested
@@ -129,8 +129,8 @@ describe("Find It First Smart Contract Test", () => {
         DEBUG?console.log(`FIF Tickets approved by P1    (allowance: ${await fifTicket.allowance(player1.address, fif.target)}) and P2 (allowance: ${await fifTicket.allowance(player2.address, fif.target)}) to FIF GAME`, `at ${(new Error().stack).match(re_getFileLine)}`):null
 
       
-        await fif.connect(player1).startGameMatch(ethers.parseEther('1'))
-        await fif.connect(player2).startGameMatch(ethers.parseEther('1'))
+        await fif.connect(player1).requestGameMatch(ethers.parseEther('1'))
+        await fif.connect(player2).requestGameMatch(ethers.parseEther('1'))
         DEBUG?console.log(`FIF Tickets balance by P1 (balance: ${await fifTicket.balanceOf(player1.address)}) and P2 (balance: ${await fifTicket.balanceOf(player2.address)}) after spent tickets on FIF GAME`, `at ${(new Error().stack).match(re_getFileLine)}`):null
 
         filter = fif.filters.GameMatchRequested

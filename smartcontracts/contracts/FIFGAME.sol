@@ -51,6 +51,7 @@ contract FIFGameHS is EIP712, AccessControl,  VRFConsumerBaseV2Plus {
     mapping(uint256 => bool) public vouchers; // Indica si un jugador tiene un voucher
     mapping(uint256 => address) private s_players;
     mapping(address => uint256) private s_results;
+    mapping(address => uint256) private s_ticket_players_balance;
     
     uint32 constant CALLBACK_GAS_LIMIT = 100000;
     uint16 constant REQUEST_CONFIRMATIONS = 3;
@@ -106,17 +107,23 @@ contract FIFGameHS is EIP712, AccessControl,  VRFConsumerBaseV2Plus {
             "Error en la transferencia"
         );
 
-        fifTicket.mint(msg.sender, amount);
+        // TODO mint it to this smart contract address 
+        fifTicket.mint(address(this), amount);
+        // fifTicket.mint(msg.sender, amount);
+
+        // TODO associate msg.sender with amount 
+        s_ticket_players_balance[msg.sender] += amount;
+
         // TODO prevent ticket withdraw
         // TODO prevent ticket transfer
         DEBUG?console.log("SC ::: FIFTicket minted: mintTickets", msg.sender, amount): ();
 
     }
 
-    function startGameMatch(uint256 _ticketsToBet) external {
+    function requestGameMatch(uint256 _ticketsToBet) external {
 
 
-        DEBUG?console.log("SC ::: START: startGameMatch", msg.sender):();
+        DEBUG?console.log("SC ::: START: requestGameMatch", msg.sender):();
         require(
             _ticketsToBet % 1 ether == 0,
             "Must send a multiple of the T2TR"
@@ -149,7 +156,7 @@ contract FIFGameHS is EIP712, AccessControl,  VRFConsumerBaseV2Plus {
         // request a random number (chainlink) and 
         // event emit the sender, bet and requestId
         emit GameMatchRequested(msg.sender, _ticketsToBet, s_requestId);
-        DEBUG?console.log("SC ::: END of startGameMatch"):();
+        DEBUG?console.log("SC ::: END of requestGameMatch"):();
     }
 
     function fulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) internal override {
@@ -180,13 +187,13 @@ contract FIFGameHS is EIP712, AccessControl,  VRFConsumerBaseV2Plus {
         uint256 _amountOfFIFCoinForWinner = ((91803398874 * 10 ** 9) * voucher.winnerReward) / 10 ** 20; // 91.803398874 % BMMM3SC Sender
         uint256 _amountOfFIFCoinForDAO = ((3606797749 * 10 ** 9) * voucher.winnerReward) / 10 ** 20; //  3.606797749 % BMMM3SC DAO
 
-        fifToken.approve(AUTHOR_ADDRESS, _amountOfFIFCoinForAuthor); //42572472580000000
+        // fifToken.approve(AUTHOR_ADDRESS, _amountOfFIFCoinForAuthor); //42572472580000000
         fifToken.transfer(AUTHOR_ADDRESS, _amountOfFIFCoinForAuthor);
 
-        fifToken.approve(DAO_TREASURY_ADDRESS, _amountOfFIFCoinForTreasury);
+        // fifToken.approve(DAO_TREASURY_ADDRESS, _amountOfFIFCoinForTreasury);
         fifToken.transfer(DAO_TREASURY_ADDRESS, _amountOfFIFCoinForTreasury);
 
-        fifToken.approve(DAO_FUND_ADDRESS, _amountOfFIFCoinForDAO);
+        // fifToken.approve(DAO_FUND_ADDRESS, _amountOfFIFCoinForDAO);
         fifToken.transfer(DAO_FUND_ADDRESS, _amountOfFIFCoinForDAO);
 
         fifToken.approve(stringToAddress(voucher.winnerAddress), _amountOfFIFCoinForWinner);
