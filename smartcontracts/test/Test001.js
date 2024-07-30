@@ -152,7 +152,7 @@ describe("Find It First Smart Contract Test", () => {
 
         await expect(await fif.redeem(voucher))
         .to.emit(fif, 'RewardRedeemed')  // transfer from null address to minter
-        .withArgs(voucher.winnerAddress, Math.floor(voucher.winnerReward*.91803398874))
+        .withArgs(voucher.winnerAddress, Math.floor(voucher.winnerReward*.81390000000))
 
         await expect(fif.redeem(voucher))
             .to.be.revertedWith('Voucher spent')
