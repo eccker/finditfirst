@@ -62,12 +62,12 @@ function generateSeries(L, M) {
 }
 
 let match = []
-const maxLevel = 256
+const maxLevel = 500
 for (let index = 12; index < maxLevel; index++) {
     const L = Array.from({ length: index }, (_, i) => i + 1); 
-    const M = 100; // Number of series to generate
+    const M = 500; // Number of series to generate
     const generatedSeries = generateSeries(L,M)
     match.push(generatedSeries)
 }
 console.log(match.length)
-console.log(match[0][0][0])
+console.log(match[0].length)

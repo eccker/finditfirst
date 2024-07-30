@@ -184,18 +184,12 @@ let sketch = (p) => {
                     bufferDeckData.shift()
                     bufferDeckImgs.shift()
                 }
-
                 p.loadImage(data.urls.thumb, _img => {
-
-
                     if (p.windowWidth > p.windowHeight) {
-
                         bufferDeckImgs.push(cropAndResizeImage(_img, gridSpaceX * 6, gridSpaceY * 6))
                     } else {
-
                         bufferDeckImgs.push(cropAndResizeImage(_img, gridSpaceX * 6, gridSpaceY * 6))
                     }
-
                     bufferDeckData.push(data)
                 })
             }
@@ -240,7 +234,6 @@ let sketch = (p) => {
                 }
             }
         })
-
     }
 
     p.windowResized = () => {
@@ -382,7 +375,6 @@ let sketch = (p) => {
                 someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * ranTime) + minTime)
                 tempcol = "#" + makeHexString(6)
 
-
                 for (let index = 0; index < 6; index++) {
                     if (topDeck.imgs.length > 5) {
                         topDeck.imgs = []
@@ -406,8 +398,6 @@ let sketch = (p) => {
                     gameStatus = `lose`
                     encodeSendJWTRequestBuffer(difficulty, channel)
                 }
-
-
                 p.background(10, 10, 10, 251)
             }
         }
