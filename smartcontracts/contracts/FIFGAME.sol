@@ -50,8 +50,8 @@ contract FIFGameHS is EIP712, AccessControl,  VRFConsumerBaseV2Plus {
 
     mapping(uint256 => bool) public vouchers; // Indica si un jugador tiene un voucher
     mapping(uint256 => address) private s_players;
-    mapping(address => uint256) private s_results;
-    mapping(address => uint256) private s_ticket_players_balance;
+    // mapping(address => uint256) private s_results;
+    mapping(address => uint256) private ticketBalances;
     
     uint32 constant CALLBACK_GAS_LIMIT = 100000;
     uint16 constant REQUEST_CONFIRMATIONS = 3;
@@ -66,7 +66,7 @@ contract FIFGameHS is EIP712, AccessControl,  VRFConsumerBaseV2Plus {
     uint256 public TOKEN_TO_TICKET_RATE = 1 ether;
     
     uint256[] public s_randomWords;
-    uint256 public s_requestId;
+    // uint256 public s_requestId;
     uint256 public highScorePool = 0;
 
     struct WinnerVoucher {
@@ -80,10 +80,10 @@ contract FIFGameHS is EIP712, AccessControl,  VRFConsumerBaseV2Plus {
     event TransferTokens(address indexed player, uint256 amount);
     event GameMatchStarted(address indexed player, uint256 indexed requestId, uint256 randomNumbers);
     event RewardRedeemed(address indexed player, uint256 amount);
-    event GameMatchRequested(address indexed player, uint256 indexed betAmount, uint256 indexed requestId);
+    event GameMatchRequested(address indexed player, uint256 betAmount, uint256 indexed requestId);
 
-    constructor(uint256 subscriptionId, address _vrfCoordinator) VRFConsumerBaseV2Plus(_vrfCoordinator) EIP712(SIGNING_DOMAIN, SIGNATURE_VERSION) {
-        s_subscriptionId = subscriptionId;
+    constructor(uint256 _subscriptionId, address _vrfCoordinator) VRFConsumerBaseV2Plus(_vrfCoordinator) EIP712(SIGNING_DOMAIN, SIGNATURE_VERSION) {
+        s_subscriptionId = _subscriptionId;
         _grantRole(MINTER_ROLE, msg.sender);
     }
 
@@ -122,6 +122,8 @@ contract FIFGameHS is EIP712, AccessControl,  VRFConsumerBaseV2Plus {
         )
     );
 
+    require(success, "Error in permit");
+
     require(
             fifToken.transferFrom(
                 msg.sender,
@@ -131,14 +133,12 @@ contract FIFGameHS is EIP712, AccessControl,  VRFConsumerBaseV2Plus {
             "Token transfer failed"
         );
 
-    require(success, "Error in permit");
-
-        // prevent ticket withdraw and transfer by be owned by FIFGameHS
+        // Ensure tickets are non-transferable and can only be managed by FIFGameHS
         // mint it to this smart contract address 
         fifTicket.mint(address(this), amount);
 
         // associate msg.sender with amount 
-        s_ticket_players_balance[msg.sender] += amount;
+        ticketBalances[msg.sender] += amount;
 
         DEBUG?console.log("SC ::: FIFTicket minted: mintTickets", msg.sender, amount): ();
 
@@ -152,16 +152,15 @@ contract FIFGameHS is EIP712, AccessControl,  VRFConsumerBaseV2Plus {
         );
 
         require(
-            s_ticket_players_balance[msg.sender] >= _ticketsToBet,
+            ticketBalances[msg.sender] >= _ticketsToBet,
             "Not enough tickets to bet"
         );
-        s_ticket_players_balance[msg.sender] -= _ticketsToBet;
+        ticketBalances[msg.sender] -= _ticketsToBet;
+        highScorePool += _ticketsToBet;
         fifTicket.burn(_ticketsToBet);
 
-        highScorePool += _ticketsToBet;
-
         // request a random number (chainlink)
-        s_requestId = s_vrfCoordinator.requestRandomWords(
+        uint256 requestId = s_vrfCoordinator.requestRandomWords(
             VRFV2PlusClient.RandomWordsRequest({
                 keyHash: s_keyHash,
                 subId: s_subscriptionId,
@@ -174,17 +173,16 @@ contract FIFGameHS is EIP712, AccessControl,  VRFConsumerBaseV2Plus {
             })
         );
 
-        s_players[s_requestId] = msg.sender;
-        s_results[msg.sender] = 1;
+        s_players[requestId] = msg.sender;
         
         // event emit the sender, bet and requestId
-        emit GameMatchRequested(msg.sender, _ticketsToBet, s_requestId);
+        emit GameMatchRequested(msg.sender, _ticketsToBet, requestId);
         DEBUG?console.log("SC ::: END of requestGameMatch"):();
     }
 
-    function fulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) internal override {
-        uint256 rn = randomWords[0];
-        emit GameMatchStarted(s_players[s_requestId], requestId, rn);
+    function fulfillRandomWords(uint256 _requestId, uint256[] calldata _randomWords) internal override {
+        uint256 rn = _randomWords[0];
+        emit GameMatchStarted(s_players[_requestId], _requestId, rn);
     }
 
     function redeem(WinnerVoucher calldata voucher) public {
