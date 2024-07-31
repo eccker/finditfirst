@@ -77,10 +77,9 @@ contract FIFGameHS is EIP712, AccessControl,  VRFConsumerBaseV2Plus {
         bytes signature;
     }
 
-    event TransferTokens(address indexed player, uint256 amount);
+    event GameMatchRequested(address indexed player, uint256 betAmount, uint256 indexed requestId);
     event GameMatchStarted(address indexed player, uint256 indexed requestId, uint256 randomNumbers);
     event RewardRedeemed(address indexed player, uint256 amount);
-    event GameMatchRequested(address indexed player, uint256 betAmount, uint256 indexed requestId);
 
     constructor(uint256 _subscriptionId, address _vrfCoordinator) VRFConsumerBaseV2Plus(_vrfCoordinator) EIP712(SIGNING_DOMAIN, SIGNATURE_VERSION) {
         s_subscriptionId = _subscriptionId;
@@ -198,7 +197,8 @@ contract FIFGameHS is EIP712, AccessControl,  VRFConsumerBaseV2Plus {
         require(vouchers[voucher.voucherId] != true, "Voucher spent");
 
         vouchers[voucher.voucherId] = true;
-
+        DEBUG?console.log("SC ::: redeem", msg.sender, highScorePool): ();
+        DEBUG?console.log("SC ::: redeem", msg.sender, voucher.winnerReward): ();
         require(highScorePool >= voucher.winnerReward, "not enough in pool");
         highScorePool -= voucher.winnerReward;
       
