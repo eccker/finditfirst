@@ -128,7 +128,7 @@ describe("Find It First Smart Contract Test", () => {
         const voucher = await voucherMaker.createVoucher(voucherID, winnerReward, winnerBet, winnerAddress)
         DEBUG?console.log("point 5"):null
         
-        expect(await fif.redeem(voucher))
+        expect(await fif.connect(userRandom).redeem(voucher))
         .to.emit(fif, 'RewardRedeemed') 
         .withArgs(voucher.winnerAddress, voucher.winnerReward)
         DEBUG?console.log("point 6: ", voucher.winnerReward):null
@@ -193,33 +193,6 @@ describe("Find It First Smart Contract Test", () => {
         await expect(fif.redeem(voucher))
             .to.be.revertedWith('Voucher spent')
     });
-
-    // it("Should fail to redeem a Reward with mismatch bets and reward", async function () {
-    //     const voucherMaker = new VoucherMaker({ contract: fif, signer: owner })
-    //     let voucherID = 1,
-    //     winnerReward = 32, 
-    //     winnerBet = 15, 
-    //     winnerAddress =  `${player1.address}`
-
-    //     const voucher = await voucherMaker.createVoucher(voucherID, winnerReward, winnerBet, winnerAddress)
-
-    //     await expect(fif.redeem(voucher))
-    //         // .to.be.revertedWith('Voucher reward and bets do not match')
-    // });
-
-
-    
-    // it("Should fail to redeem a Reward with mismatch Balances and Bets not matching", async function () {
-    //     const voucherMaker = new VoucherMaker({ contract: fif, signer: owner })
-    //     let voucherID = 1,
-    //     winnerReward = ethers.parseEther('40'), 
-    //     winnerBet = ethers.parseEther('20'), 
-    //     winnerAddress =  `${player1.address}`
-    //     const voucher = await voucherMaker.createVoucher(voucherID, winnerReward, winnerBet, winnerAddress)
-        
-    //     await expect(fif.redeem(voucher))
-    // });
-
 });
 
 // Helper function to generate permit signature
