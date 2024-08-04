@@ -156,20 +156,6 @@ const server = app.use(serveStatic(__dirname + serverPath)).listen(port, () => {
 	console.log(`'finditfirst' esta corriendo por el puerto ${port} en modo ${arguments[0]}`)
 })
 
-// const {
-// 	createApi
-// } = require('unsplash-js');
-// const nodeFetch = require('node-fetch');
-// const {
-// 	error
-// } = require('console');
-
-// const unsplash = createApi({
-// 	accessKey: '7pa6kOrgWDuhpvhQR9vCfAy1W_nkSeouS2ClEEVkatQ',
-// 	fetch: nodeFetch,
-// });
-
-
 
 // -------- Cloud App, business logic 
 let io = require('socket.io')(server, {
