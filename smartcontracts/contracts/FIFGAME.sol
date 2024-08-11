@@ -69,15 +69,15 @@ contract FIFGameHS is EIP712, AccessControl,  VRFConsumerBaseV2Plus {
     // uint256 public s_requestId;
     uint256 public highScorePool = 0;
 
-    struct WinnerVoucher {
+    struct Voucher {
         uint256 voucherId;
-        uint256 winnerReward;
-        uint256 winnerBet;
-        string winnerAddress;
+        uint256 amountToWithdraw;
+        // uint256 winnerBet;
+        string recipientAddress;
         bytes signature;
     }
 
-    event GameMatchRequested(address indexed player, uint256 betAmount, uint256 indexed requestId);
+    event GameMatchRequested(address indexed player, uint256 betAmount, uint256 indexed requestId, uint256 indexed currentHSPoolAmount);
     event GameMatchStarted(address indexed player, uint256 indexed requestId, uint256 randomNumbers);
     event RewardRedeemed(address indexed player, uint256 amount);
 
@@ -101,13 +101,13 @@ contract FIFGameHS is EIP712, AccessControl,  VRFConsumerBaseV2Plus {
         bytes32 r,
         bytes32 s,
         uint8 v
-    )external {//  function to mint Tickets from Tokens
+    )external 
+    {
         require(
             amount % TOKEN_TO_TICKET_RATE == 0,
             "Must send a multiple of the T2TR"
         );
 
-        // Get the permit signature
     (bool success, ) = address(fifToken).call(
         abi.encodeWithSignature(
             "permit(address,address,uint256,uint256,uint8,bytes32,bytes32)",
@@ -155,8 +155,8 @@ contract FIFGameHS is EIP712, AccessControl,  VRFConsumerBaseV2Plus {
             "Not enough tickets to bet"
         );
         ticketBalances[msg.sender] -= _ticketsToBet;
-        highScorePool += _ticketsToBet;
         fifTicket.burn(_ticketsToBet);
+        highScorePool += _ticketsToBet;
 
         // request a random number (chainlink)
         uint256 requestId = s_vrfCoordinator.requestRandomWords(
@@ -175,7 +175,7 @@ contract FIFGameHS is EIP712, AccessControl,  VRFConsumerBaseV2Plus {
         s_players[requestId] = msg.sender;
         
         // event emit the sender, bet and requestId
-        emit GameMatchRequested(msg.sender, _ticketsToBet, requestId);
+        emit GameMatchRequested(msg.sender, _ticketsToBet, requestId, highScorePool);
         DEBUG?console.log("SC ::: END of requestGameMatch"):();
     }
 
@@ -184,7 +184,7 @@ contract FIFGameHS is EIP712, AccessControl,  VRFConsumerBaseV2Plus {
         emit GameMatchStarted(s_players[_requestId], _requestId, rn);
     }
 
-    function redeem(WinnerVoucher calldata voucher) public {
+    function redeem(Voucher calldata voucher) public {
         // make sure signature is valid and get the address of the signer
         address signer = _verify(voucher);
 
@@ -198,25 +198,25 @@ contract FIFGameHS is EIP712, AccessControl,  VRFConsumerBaseV2Plus {
 
         vouchers[voucher.voucherId] = true;
         DEBUG?console.log("SC ::: redeem", msg.sender, highScorePool): ();
-        DEBUG?console.log("SC ::: redeem", msg.sender, voucher.winnerReward): ();
-        require(highScorePool >= voucher.winnerReward, "not enough in pool");
-        highScorePool -= voucher.winnerReward;
+        DEBUG?console.log("SC ::: redeem", msg.sender, voucher.amountToWithdraw): ();
+        require(highScorePool >= voucher.amountToWithdraw, "not enough in pool");
+        highScorePool -= voucher.amountToWithdraw;
       
-        uint256 _amountOfFIFCoinForWinner          = (81390000000 * voucher.winnerReward) / 100000000000;
-        uint256 _amountOfFIFCoinForAuthor          = ( 1618000000 * voucher.winnerReward) / 100000000000;
-        uint256 _amountOfFIFCoinForDAO             = ( 4854000000 * voucher.winnerReward) / 100000000000;
-        uint256 _amountOfFIFCoinForTreasury        = ( 6472000000 * voucher.winnerReward) / 100000000000;
-        uint256 _amountOfFIFCoinForDevelopers      = ( 3236000000 * voucher.winnerReward) / 100000000000;
-        uint256 _amountOfFIFCoinForContentCreators = ( 2430000000 * voucher.winnerReward) / 100000000000;
+        uint256 _amountOfFIFCoinForWinner          = (81390000000 * voucher.amountToWithdraw) / 100000000000;
+        uint256 _amountOfFIFCoinForAuthor          = ( 1618000000 * voucher.amountToWithdraw) / 100000000000;
+        uint256 _amountOfFIFCoinForDAO             = ( 4854000000 * voucher.amountToWithdraw) / 100000000000;
+        uint256 _amountOfFIFCoinForTreasury        = ( 6472000000 * voucher.amountToWithdraw) / 100000000000;
+        uint256 _amountOfFIFCoinForDevelopers      = ( 3236000000 * voucher.amountToWithdraw) / 100000000000;
+        uint256 _amountOfFIFCoinForContentCreators = ( 2430000000 * voucher.amountToWithdraw) / 100000000000;
 
         fifToken.transfer(AUTHOR_ADDRESS,                                   _amountOfFIFCoinForAuthor);
         fifToken.transfer(DAO_TREASURY_ADDRESS,                             _amountOfFIFCoinForTreasury);
         fifToken.transfer(DAO_FUND_ADDRESS,                                 _amountOfFIFCoinForDAO);
         fifToken.transfer(DEVELOPER_ADDRESS,                                _amountOfFIFCoinForDevelopers);
         fifToken.transfer(CONTENT_CREATORS_ADDRESS,                         _amountOfFIFCoinForContentCreators);
-        fifToken.transfer(address(stringToAddress(voucher.winnerAddress)),  _amountOfFIFCoinForWinner);
+        fifToken.transfer(address(stringToAddress(voucher.recipientAddress)),  _amountOfFIFCoinForWinner);
 
-        emit RewardRedeemed(stringToAddress(voucher.winnerAddress), _amountOfFIFCoinForWinner);
+        emit RewardRedeemed(stringToAddress(voucher.recipientAddress), _amountOfFIFCoinForWinner);
     }
 
     function stringToAddress(string calldata s) public pure returns (address) {
@@ -262,18 +262,18 @@ contract FIFGameHS is EIP712, AccessControl,  VRFConsumerBaseV2Plus {
         return 0;
     }
 
-    function _hash(WinnerVoucher calldata voucher) internal view returns (bytes32) {
+    function _hash(Voucher calldata voucher) internal view returns (bytes32) {
         return
             _hashTypedDataV4(
                 keccak256(
                     abi.encode(
                         keccak256(
-                            "WinnerVoucher(uint256 voucherId,uint256 winnerReward,uint256 winnerBet,string winnerAddress)"
+                            "Voucher(uint256 voucherId,uint256 amountToWithdraw,string recipientAddress)"
                         ),
                         voucher.voucherId,
-                        voucher.winnerReward,
-                        voucher.winnerBet,
-                        keccak256(bytes(voucher.winnerAddress))
+                        voucher.amountToWithdraw,
+                        // voucher.winnerBet,
+                        keccak256(bytes(voucher.recipientAddress))
                     )
                 )
             );
@@ -287,7 +287,7 @@ contract FIFGameHS is EIP712, AccessControl,  VRFConsumerBaseV2Plus {
         return id;
     }
 
-    function _verify(WinnerVoucher calldata voucher) internal view returns (address) {
+    function _verify(Voucher calldata voucher) internal view returns (address) {
         bytes32 digest = _hash(voucher);
         return ECDSA.recover(digest, voucher.signature);
     }

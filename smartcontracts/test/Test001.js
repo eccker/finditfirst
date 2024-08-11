@@ -109,8 +109,8 @@ describe("Find It First Smart Contract Test", () => {
 
     it("It should redeem a voucher", async () => {
         // use of permit functionality to avoid approve gas consupmtion 
-        await fif.connect(player1).requestGameMatch(AMOUNT_TO_BET)
-        await fif.connect(player2).requestGameMatch(AMOUNT_TO_BET)
+        expect(await fif.connect(player1).requestGameMatch(AMOUNT_TO_BET)).to.emit(fif,'GameMatchRequested').withArgs(player1.address,AMOUNT_TO_BET,1,AMOUNT_TO_BET)
+        expect(await fif.connect(player2).requestGameMatch(AMOUNT_TO_BET)).to.emit(fif,'GameMatchRequested').withArgs(player2.address,AMOUNT_TO_BET,2,BigInt(AMOUNT_TO_BET)*BigInt(2n))
         DEBUG?console.log(`FIF requestGameMatch`, `at ${(new Error().stack).match(re_getFileLine)}`):null
 
         filter = fif.filters.GameMatchRequested
@@ -122,30 +122,30 @@ describe("Find It First Smart Contract Test", () => {
  
         const voucherMaker = new VoucherMaker({ contract: fif, signer: owner })
         let voucherID = 1,
-        winnerReward = BigInt(AMOUNT_TO_BET)*BigInt(2), 
-        winnerBet = AMOUNT_TO_BET, 
+        amountToWithdraw = BigInt(AMOUNT_TO_BET)*BigInt(2), 
+        // winnerBet = AMOUNT_TO_BET, 
         winnerAddress =  `${player1.address}`
-        const voucher = await voucherMaker.createVoucher(voucherID, winnerReward, winnerBet, winnerAddress)
+        const voucher = await voucherMaker.createVoucher(voucherID, amountToWithdraw, winnerAddress)
         DEBUG?console.log("point 5"):null
         
         expect(await fif.connect(userRandom).redeem(voucher))
         .to.emit(fif, 'RewardRedeemed') 
-        .withArgs(voucher.winnerAddress, voucher.winnerReward)
-        DEBUG?console.log("point 6: ", voucher.winnerReward):null
+        .withArgs(voucher.winnerAddress, voucher.amountToWithdraw)
+        DEBUG?console.log("point 6: ", voucher.amountToWithdraw):null
         
         const expectedBalanceP1 = BigInt(fifTokenPlayer1InitialBalance) 
                                 - AMOUNT_OF_TICKETS_TO_BUY
-                                + (BigInt(voucher.winnerReward) * BigInt(81390000000)) / BigInt(100000000000);
+                                + (BigInt(voucher.amountToWithdraw) * BigInt(81390000000)) / BigInt(100000000000);
         DEBUG?console.log("point 7: ", expectedBalanceP1):null
         DEBUG?console.log("point 8: ", await fifToken.balanceOf(player1.address)):null
 
         const expectedBalanceP2 = fifTokenPlayer2InitialBalance - AMOUNT_OF_TICKETS_TO_BUY;
 
-        let expectedBalanceAuthor           = (BigInt(voucher.winnerReward) * BigInt(1618000000)) / BigInt(100000000000)
-        let expectedBalanceContentCreators  = (BigInt(voucher.winnerReward) * BigInt(2430000000)) / BigInt(100000000000)
-        let expectedBalanceDevelopers       = (BigInt(voucher.winnerReward) * BigInt(3236000000)) / BigInt(100000000000)
-        let expectedBalanceDAO              = (BigInt(voucher.winnerReward) * BigInt(4854000000)) / BigInt(100000000000)
-        let expectedBalanceTreasury         = (BigInt(voucher.winnerReward) * BigInt(6472000000)) / BigInt(100000000000)
+        let expectedBalanceAuthor           = (BigInt(voucher.amountToWithdraw) * BigInt(1618000000)) / BigInt(100000000000)
+        let expectedBalanceContentCreators  = (BigInt(voucher.amountToWithdraw) * BigInt(2430000000)) / BigInt(100000000000)
+        let expectedBalanceDevelopers       = (BigInt(voucher.amountToWithdraw) * BigInt(3236000000)) / BigInt(100000000000)
+        let expectedBalanceDAO              = (BigInt(voucher.amountToWithdraw) * BigInt(4854000000)) / BigInt(100000000000)
+        let expectedBalanceTreasury         = (BigInt(voucher.amountToWithdraw) * BigInt(6472000000)) / BigInt(100000000000)
         
         const AUTHOR_ADDRESS            = "0x090Ec11314d4BD31B536F52472d2E6A1D4771220";
         const DAO_TREASURY_ADDRESS      = "0x88c7CE98b4924c7eA58F160D3A128e0592ECB053";
@@ -166,7 +166,7 @@ describe("Find It First Smart Contract Test", () => {
     it("Should fail to redeem a Reward that's already been claimed", async function () {
         
         await fif.connect(player1).requestGameMatch(ethers.parseEther('1'))
-        await fif.connect(player2).requestGameMatch(ethers.parseEther('1'))
+        await fif.connect(player2).requestGameMatch(ethers.parseEther('100'))
         DEBUG?console.log(`FIF Tickets balance by P1 (balance: ${await fifTicket.balanceOf(player1.address)}) and P2 (balance: ${await fifTicket.balanceOf(player2.address)}) after spent tickets on FIF GAME`, `at ${(new Error().stack).match(re_getFileLine)}`):null
 
         filter = fif.filters.GameMatchRequested
@@ -180,15 +180,15 @@ describe("Find It First Smart Contract Test", () => {
         
         const voucherMaker = new VoucherMaker({ contract: fif, signer: owner })
         let voucherID = 1,
-        winnerReward = 31, 
+        amountToWithdraw = 31, 
         winnerBet = 15, 
-        winnerAddress =  `${player1.address}`
+        recipientAddress =  `${player1.address}`
 
-        const voucher = await voucherMaker.createVoucher(voucherID, winnerReward, winnerBet, winnerAddress)
+        const voucher = await voucherMaker.createVoucher(voucherID, amountToWithdraw, recipientAddress)
 
         await expect(await fif.redeem(voucher))
         .to.emit(fif, 'RewardRedeemed')  // transfer from null address to minter
-        .withArgs(voucher.winnerAddress, Math.floor(voucher.winnerReward*.81390000000))
+        .withArgs(voucher.recipientAddress, Math.floor(voucher.amountToWithdraw*.81390000000))
 
         await expect(fif.redeem(voucher))
             .to.be.revertedWith('Voucher spent')
