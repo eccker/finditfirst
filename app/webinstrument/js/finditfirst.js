@@ -1,4 +1,13 @@
+
 let sketch = (p) => {
+    const ethers = window.moduleExports;
+    let provider
+    let signer
+
+    let setupReady = false
+    let preloadReady = false
+    
+
     const INITIAL_DIFFICULTY = 16
     let now = 0
     let lastGeneratedTime = 0
@@ -142,9 +151,16 @@ let sketch = (p) => {
     p.preload = () => {
         gridSpaceX = p.windowWidth / 32
         gridSpaceY = p.windowHeight / 32
+        console.log(`PRELOAD`)
     }
 
-    p.setup = () => {
+    p.setup = async () => {
+        
+        provider = new ethers.BrowserProvider(window.ethereum);
+        signer = await provider.getSigner();
+        console.log("P5JS: Signer:", signer);
+        console.log("P5JS: Account:", await signer.getAddress())
+
         canvasApp = p.createCanvas(p.windowWidth, p.windowHeight)
         canvasApp.style('display', 'block')
         canvasApp.id('canvas')
@@ -234,6 +250,8 @@ let sketch = (p) => {
                 }
             }
         })
+        console.log(`setup finished`)
+        setupReady = true
     }
 
     p.windowResized = () => {
@@ -249,7 +267,14 @@ let sketch = (p) => {
         p.background(10, 10, 10, 251)
     }
 
-    p.draw = () => {
+    p.draw = async () => {
+        if(!setupReady){
+            console.log(`NOT DRAWING`)
+            p.frameRate(1)
+        }
+        else {
+        p.frameRate(24)
+        
         p.background(10, 10, 10, 251)
 
 
@@ -258,7 +283,6 @@ let sketch = (p) => {
             p.text(`Ready? Press [Space Bar] or Tap to Start`, gridSpaceX * 7, gridSpaceY * 17, gridSpaceX*18, gridSpaceY*6)
             p.text(`How to Play: `, gridSpaceX * 7, gridSpaceY * 18, gridSpaceX*18, gridSpaceY*6)
             p.text(`Drag and Drop one image from the 6 bottom that matches one of the upper 6  `, gridSpaceX * 7, gridSpaceY * 19, gridSpaceX*18, gridSpaceY*6)
-
             opDeckBtn.hide()
         }
 
@@ -401,7 +425,7 @@ let sketch = (p) => {
                 p.background(10, 10, 10, 251)
             }
         }
-    }
+    }}
 
     p.doubleClicked = () => {
         if (gameStatus === `lose`) {
