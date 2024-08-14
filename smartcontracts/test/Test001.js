@@ -10,20 +10,9 @@ const re_getFileLine = /(?<=\/)[^\/]+\:\d+\:\d+/
 const DEBUG = true
 const subscription_id = hre.ethers.parseUnits(process.env.SUBSCRIPTION_ID, 0);
 
-const emittedEvents = [];
-const saveEvents = async (tx) => {
-    const receipt = await tx.wait()
-    receipt.events.forEach(ev => {
-        if (ev.event) {
-            emittedEvents.push({
-                name: ev.event,
-                args: ev.args
-            });
-        }
-    });
-    console.log(`emittedEvents: `, emittedEvents);
-}
 describe("Find It First Smart Contract Test", () => {
+    const AMOUNT_OF_TICKETS_TO_BUY = ethers.parseEther('150')
+    const AMOUNT_TO_BET = ethers.parseEther('50')
     let fifToken
     let usdTokenTest
     let fif
@@ -32,6 +21,9 @@ describe("Find It First Smart Contract Test", () => {
     let player2
     let userRandom
     let fifVRFCoordinatorV2_5Mock
+    let fifTokenPlayer1InitialBalance
+    let fifTokenPlayer2InitialBalance
+
     beforeEach(async function () {
         [owner, player1, player2, userRandom] = await ethers.getSigners();
         DEBUG?console.log(`\r\nowner address: ${owner.address},\r\np1    address: ${player1.address}, \r\np2    address: ${player2.address}`, `at ${(new Error().stack).match(re_getFileLine)}`):null
@@ -50,7 +42,7 @@ describe("Find It First Smart Contract Test", () => {
         events = await fifVRFCoordinatorV2_5Mock.queryFilter(filter, 1)
         const subId = events[0].args[0];
         
-        await fifVRFCoordinatorV2_5Mock.fundSubscription(subId, ethers.parseEther('1'))
+        await fifVRFCoordinatorV2_5Mock.fundSubscription(subId, ethers.parseEther('100'))
         DEBUG?console.log(`fundSubscription completed`, `at ${(new Error().stack).match(re_getFileLine)}`):null
 
         fif = await ethers.deployContract("FIFGameHS", [subId, fifVRFCoordinatorV2_5Mock.target], owner);
@@ -63,115 +55,118 @@ describe("Find It First Smart Contract Test", () => {
         
         await fif.connect(owner).setTokenAndTicketAddress(fifToken.target, fifTicket.target)
 
-        await usdTokenTest.connect(owner).transfer(player1.address, ethers.parseEther('1'))
-        await usdTokenTest.connect(owner).transfer(player2.address, ethers.parseEther('1'))
+        await usdTokenTest.connect(owner).transfer(player1.address, ethers.parseEther('1000'))
+        await usdTokenTest.connect(owner).transfer(player2.address, ethers.parseEther('1000'))
         DEBUG?console.log(`USDTT transfer from owner to P1 (balance: ${await usdTokenTest.balanceOf(player1.address)}) and P2 (  balance: ${await usdTokenTest.balanceOf(player2.address)})`, `at ${(new Error().stack).match(re_getFileLine)}`):null
         
-        await usdTokenTest.connect(player1).approve(fifToken.target, ethers.parseEther('1'))
-        await usdTokenTest.connect(player2).approve(fifToken.target, ethers.parseEther('1'))
+        await usdTokenTest.connect(player1).approve(fifToken.target, ethers.parseEther('365'))
+        await usdTokenTest.connect(player2).approve(fifToken.target, ethers.parseEther('200'))
         DEBUG?console.log(`USDTT approved from P1        (allowance: ${await usdTokenTest.allowance(player1.address, fifToken.target)}) and P2 (allowance: ${await usdTokenTest.allowance(player2.address, fifToken.target)}) to FIF Token`, `at ${(new Error().stack).match(re_getFileLine)}`):null
         
-        await fifToken.connect(player1).mint(player1.address, ethers.parseEther('1'));
-        await fifToken.connect(player2).mint(player2.address, ethers.parseEther('1'));
+        await fifToken.connect(player1).mint(player1.address, ethers.parseEther('365'));
+        await fifToken.connect(player2).mint(player2.address, ethers.parseEther('200'));
+        fifTokenPlayer1InitialBalance = await fifToken.balanceOf(player1.address)
+        fifTokenPlayer2InitialBalance = await fifToken.balanceOf(player2.address)
         DEBUG?console.log(`FIF Token minted by P1          (balance: ${await fifToken.balanceOf(player1.address)}) and P2 (  balance: ${await fifToken.balanceOf(player2.address)}) to FIF Token`, `at ${(new Error().stack).match(re_getFileLine)}`):null
-
-
-        await fifToken.connect(player1).approve(fif.target, ethers.parseEther('1'))
-        await fifToken.connect(player2).approve(fif.target, ethers.parseEther('1'))
-        DEBUG?console.log(`FIF Token approved from P1    (allowance: ${await fifToken.allowance(player1.address, fif.target)}) and P2 (allowance: ${await fifToken.allowance(player2.address, fif.target)}) to FIF Token`, `at ${(new Error().stack).match(re_getFileLine)}`):null
 
         // Generate a random deadline for the permit
         const deadline = Math.floor(Date.now() / 1000) + 3600; // 1 hour from now
     
+        const { v, r, s } = await getPermitSignature(
+            player1,
+            fifToken,
+            fif.target,
+            AMOUNT_OF_TICKETS_TO_BUY,
+            deadline
+        );
 
-const { v, r, s } = await getPermitSignature(
-    player1,
-    fifToken,
-    fif.target,
-    ethers.parseEther("1"),
-    deadline
-);
+        const { v: v2, r: r2, s: s2 } = await getPermitSignature(
+            player2,
+            fifToken,
+            fif.target,
+            AMOUNT_OF_TICKETS_TO_BUY,
+            deadline
+        );
 
-const { v: v2, r: r2, s: s2 } = await getPermitSignature(
-    player2,
-    fifToken,
-    fif.target,
-    ethers.parseEther("1"),
-    deadline
-);
+        DEBUG?console.log(`FIF Token signature v, r, s returned`, `at ${(new Error().stack).match(re_getFileLine)}`):null
+        // Call the mintTickets function with the permit signature
+        await fif.connect(player1).mintTickets(
+        AMOUNT_OF_TICKETS_TO_BUY,
+        deadline,
+        r,
+        s,
+        v
+        );
 
-DEBUG?console.log(`FIF Token signature v, r, s returned`, `at ${(new Error().stack).match(re_getFileLine)}`):null
-// Call the mintTickets function with the permit signature
-await fif.connect(player1).mintTickets(
-  ethers.parseEther('1'),
-  deadline,
-  r,
-  s,
-  v
-);
-
-await fif.connect(player2).mintTickets(
-    ethers.parseEther('1'),
-    deadline,
-    r2,
-    s2,
-    v2
-  );
-
-
-        
-        // FIFGameHS contract is the only one who can mint tickets to players
-        // await fif.connect(player1).mintTickets(ethers.parseEther('1'))
-        // await fif.connect(player2).mintTickets(ethers.parseEther('1'))
-        // DEBUG?console.log(`FIF Tickets minted by P1        (balance: ${await fifTicket.balanceOf(player1.address)}) and P2 (  balance: ${await fifTicket.balanceOf(player2.address)}) to FIF Token`, `at ${(new Error().stack).match(re_getFileLine)}`):null
-      
+        await fif.connect(player2).mintTickets(
+            AMOUNT_OF_TICKETS_TO_BUY,
+            deadline,
+            r2,
+            s2,
+            v2
+        );
     });
 
     it("It should redeem a voucher", async () => {
-        // TODO make use of permit functionality to avoid approve gas consupmtion 
-        // await fifTicket.connect(player1).approve(fif.target, ethers.parseEther('1'))
-        // await fifTicket.connect(player2).approve(fif.target, ethers.parseEther('1'))
-        // DEBUG?console.log(`FIF Tickets approved by P1    (allowance: ${await fifTicket.allowance(player1.address, fif.target)}) and P2 (allowance: ${await fifTicket.allowance(player2.address, fif.target)}) to FIF GAME`, `at ${(new Error().stack).match(re_getFileLine)}`):null
-
-
-        await fif.connect(player1).requestGameMatch(ethers.parseEther('1'))
-        await fif.connect(player2).requestGameMatch(ethers.parseEther('1'))
-        DEBUG?console.log(`FIF Tickets requestGameMatch`, `at ${(new Error().stack).match(re_getFileLine)}`):null
-        // DEBUG?console.log(`FIF Tickets balance by P1 (balance: ${await fifTicket.balanceOf(player1.address)}) and P2 (balance: ${await fifTicket.balanceOf(player2.address)}) after spent tickets on FIF GAME`, `at ${(new Error().stack).match(re_getFileLine)}`):null
+        // use of permit functionality to avoid approve gas consupmtion 
+        expect(await fif.connect(player1).requestGameMatch(AMOUNT_TO_BET)).to.emit(fif,'GameMatchRequested').withArgs(player1.address,AMOUNT_TO_BET,1,AMOUNT_TO_BET)
+        expect(await fif.connect(player2).requestGameMatch(AMOUNT_TO_BET)).to.emit(fif,'GameMatchRequested').withArgs(player2.address,AMOUNT_TO_BET,2,BigInt(AMOUNT_TO_BET)*BigInt(2n))
+        DEBUG?console.log(`FIF requestGameMatch`, `at ${(new Error().stack).match(re_getFileLine)}`):null
 
         filter = fif.filters.GameMatchRequested
         events = await fif.queryFilter(filter, 2)
-
         const eventP1 = events[0].args
         const eventP2 = events[1].args
-
         console.log(eventP1)
         console.log(eventP2)
  
         const voucherMaker = new VoucherMaker({ contract: fif, signer: owner })
         let voucherID = 1,
-        winnerReward = ethers.parseEther('2'), 
-        winnerBet = ethers.parseEther('1'), 
+        amountToWithdraw = BigInt(AMOUNT_TO_BET)*BigInt(2), 
+        // winnerBet = AMOUNT_TO_BET, 
         winnerAddress =  `${player1.address}`
- 
-        const voucher = await voucherMaker.createVoucher(voucherID, winnerReward, winnerBet, winnerAddress)
+        const voucher = await voucherMaker.createVoucher(voucherID, amountToWithdraw, winnerAddress)
         DEBUG?console.log("point 5"):null
         
-        expect(await fif.redeem(voucher))
-        .to.emit(fif, 'RewardRedeemed')  // transfer from null address to minter
-        .withArgs(voucher.winnerAddress, voucher.winnerReward)
+        expect(await fif.connect(userRandom).redeem(voucher))
+        .to.emit(fif, 'RewardRedeemed') 
+        .withArgs(voucher.winnerAddress, voucher.amountToWithdraw)
+        DEBUG?console.log("point 6: ", voucher.amountToWithdraw):null
         
+        const expectedBalanceP1 = BigInt(fifTokenPlayer1InitialBalance) 
+                                - AMOUNT_OF_TICKETS_TO_BUY
+                                + (BigInt(voucher.amountToWithdraw) * BigInt(81390000000)) / BigInt(100000000000);
+        DEBUG?console.log("point 7: ", expectedBalanceP1):null
+        DEBUG?console.log("point 8: ", await fifToken.balanceOf(player1.address)):null
+
+        const expectedBalanceP2 = fifTokenPlayer2InitialBalance - AMOUNT_OF_TICKETS_TO_BUY;
+
+        let expectedBalanceAuthor           = (BigInt(voucher.amountToWithdraw) * BigInt(1618000000)) / BigInt(100000000000)
+        let expectedBalanceContentCreators  = (BigInt(voucher.amountToWithdraw) * BigInt(2430000000)) / BigInt(100000000000)
+        let expectedBalanceDevelopers       = (BigInt(voucher.amountToWithdraw) * BigInt(3236000000)) / BigInt(100000000000)
+        let expectedBalanceDAO              = (BigInt(voucher.amountToWithdraw) * BigInt(4854000000)) / BigInt(100000000000)
+        let expectedBalanceTreasury         = (BigInt(voucher.amountToWithdraw) * BigInt(6472000000)) / BigInt(100000000000)
+        
+        const AUTHOR_ADDRESS            = "0x090Ec11314d4BD31B536F52472d2E6A1D4771220";
+        const DAO_TREASURY_ADDRESS      = "0x88c7CE98b4924c7eA58F160D3A128e0592ECB053";
+
+        const DAO_FUND_ADDRESS          = "0x2696b670D795e3B524880402C67b1ACCe6C1860f";
+        const DEVELOPER_ADDRESS         = "0x2696b670D795e3B524880402C67b1ACCe6C1860f";
+        const CONTENT_CREATORS_ADDRESS  = "0x2696b670D795e3B524880402C67b1ACCe6C1860f";
+
+        expect(await fifToken.balanceOf(player1.address))         .to.equal(expectedBalanceP1);
+        expect(await fifToken.balanceOf(player2.address))         .to.equal(expectedBalanceP2);
+        expect(await fifToken.balanceOf(AUTHOR_ADDRESS))          .to.equal(expectedBalanceAuthor);
+        expect(await fifToken.balanceOf(DAO_TREASURY_ADDRESS))    .to.equal(expectedBalanceTreasury);
+        expect(await fifToken.balanceOf(DAO_FUND_ADDRESS))        .to.equal(expectedBalanceDAO + expectedBalanceDevelopers + expectedBalanceContentCreators);
+        expect(await fifToken.balanceOf(DEVELOPER_ADDRESS))       .to.equal(expectedBalanceDAO + expectedBalanceDevelopers + expectedBalanceContentCreators);
+        expect(await fifToken.balanceOf(CONTENT_CREATORS_ADDRESS)).to.equal(expectedBalanceDAO + expectedBalanceDevelopers + expectedBalanceContentCreators);
     })
 
     it("Should fail to redeem a Reward that's already been claimed", async function () {
-        // TODO make use of permit functionality to avoid approve gas consupmtion 
-        await fifTicket.connect(player1).approve(fif.target, ethers.parseEther('1'))
-        await fifTicket.connect(player2).approve(fif.target, ethers.parseEther('1'))
-        DEBUG?console.log(`FIF Tickets approved by P1    (allowance: ${await fifTicket.allowance(player1.address, fif.target)}) and P2 (allowance: ${await fifTicket.allowance(player2.address, fif.target)}) to FIF GAME`, `at ${(new Error().stack).match(re_getFileLine)}`):null
-
-      
+        
         await fif.connect(player1).requestGameMatch(ethers.parseEther('1'))
-        await fif.connect(player2).requestGameMatch(ethers.parseEther('1'))
+        await fif.connect(player2).requestGameMatch(ethers.parseEther('100'))
         DEBUG?console.log(`FIF Tickets balance by P1 (balance: ${await fifTicket.balanceOf(player1.address)}) and P2 (balance: ${await fifTicket.balanceOf(player2.address)}) after spent tickets on FIF GAME`, `at ${(new Error().stack).match(re_getFileLine)}`):null
 
         filter = fif.filters.GameMatchRequested
@@ -185,46 +180,19 @@ await fif.connect(player2).mintTickets(
         
         const voucherMaker = new VoucherMaker({ contract: fif, signer: owner })
         let voucherID = 1,
-        winnerReward = 31, 
+        amountToWithdraw = 31, 
         winnerBet = 15, 
-        winnerAddress =  `${player1.address}`
+        recipientAddress =  `${player1.address}`
 
-        const voucher = await voucherMaker.createVoucher(voucherID, winnerReward, winnerBet, winnerAddress)
+        const voucher = await voucherMaker.createVoucher(voucherID, amountToWithdraw, recipientAddress)
 
         await expect(await fif.redeem(voucher))
         .to.emit(fif, 'RewardRedeemed')  // transfer from null address to minter
-        .withArgs(voucher.winnerAddress, Math.floor(voucher.winnerReward*.81390000000))
+        .withArgs(voucher.recipientAddress, Math.floor(voucher.amountToWithdraw*.81390000000))
 
         await expect(fif.redeem(voucher))
             .to.be.revertedWith('Voucher spent')
     });
-
-    // it("Should fail to redeem a Reward with mismatch bets and reward", async function () {
-    //     const voucherMaker = new VoucherMaker({ contract: fif, signer: owner })
-    //     let voucherID = 1,
-    //     winnerReward = 32, 
-    //     winnerBet = 15, 
-    //     winnerAddress =  `${player1.address}`
-
-    //     const voucher = await voucherMaker.createVoucher(voucherID, winnerReward, winnerBet, winnerAddress)
-
-    //     await expect(fif.redeem(voucher))
-    //         // .to.be.revertedWith('Voucher reward and bets do not match')
-    // });
-
-
-    
-    // it("Should fail to redeem a Reward with mismatch Balances and Bets not matching", async function () {
-    //     const voucherMaker = new VoucherMaker({ contract: fif, signer: owner })
-    //     let voucherID = 1,
-    //     winnerReward = ethers.parseEther('40'), 
-    //     winnerBet = ethers.parseEther('20'), 
-    //     winnerAddress =  `${player1.address}`
-    //     const voucher = await voucherMaker.createVoucher(voucherID, winnerReward, winnerBet, winnerAddress)
-        
-    //     await expect(fif.redeem(voucher))
-    // });
-
 });
 
 // Helper function to generate permit signature

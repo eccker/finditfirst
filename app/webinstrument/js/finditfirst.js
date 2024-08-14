@@ -1,4 +1,13 @@
+
 let sketch = (p) => {
+    const ethers = window.moduleExports;
+    let provider
+    let signer
+
+    let setupReady = false
+    let preloadReady = false
+    
+
     const INITIAL_DIFFICULTY = 16
     let now = 0
     let lastGeneratedTime = 0
@@ -49,7 +58,9 @@ let sketch = (p) => {
         let characters = 'ABCDEF0123456789'
         let charactersLength = characters.length
         for (var i = 0; i < length; i++) {
-            result += characters.charAt(Math.floor(Math.random() * charactersLength))
+            // result += characters.charAt(Math.floor(Math.random() * charactersLength))
+            result += characters.charAt(getRandomInt(charactersLength));
+
         }
         return result
     }
@@ -138,13 +149,33 @@ let sketch = (p) => {
 
         return gfx;
     }
+    const getRandomNumber = (min, max) => {
+        const range = max - min;
+        const bytes = new Uint32Array(1);
+        window.crypto.getRandomValues(bytes);
+        const randomNumber = bytes[0] / (0xffffffff + 1);
+        return min + randomNumber * range;
+    }
+
+    const getRandomInt = (max) => {
+        const bytes = new Uint32Array(1);
+        window.crypto.getRandomValues(bytes);
+        return Math.floor(bytes[0] / (0xffffffff + 1) * max);
+    }
 
     p.preload = () => {
         gridSpaceX = p.windowWidth / 32
         gridSpaceY = p.windowHeight / 32
+        console.log(`PRELOAD`)
     }
 
-    p.setup = () => {
+    p.setup = async () => {
+        
+        provider = new ethers.BrowserProvider(window.ethereum);
+        signer = await provider.getSigner();
+        console.log("P5JS: Signer:", signer);
+        console.log("P5JS: Account:", await signer.getAddress())
+
         canvasApp = p.createCanvas(p.windowWidth, p.windowHeight)
         canvasApp.style('display', 'block')
         canvasApp.id('canvas')
@@ -205,7 +236,8 @@ let sketch = (p) => {
         difficulty = INITIAL_DIFFICULTY
         encodeSendJWTRequestBuffer(difficulty, channel)
 
-        someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * ranTime) + minTime)
+        someHeartBeatPeriod = 1000 * (getRandomNumber(minTime, minTime + ranTime));
+
         draw_allowed = true;
         p.background(10, 10, 10, 251)
 
@@ -220,7 +252,7 @@ let sketch = (p) => {
                         topDeck.imgs = []
                         topDeck.data = []
                     }
-                    let rn = Math.floor(Math.random() * bufferDeckImgs.length)
+                    let rn = getRandomInt(bufferDeckImgs.length);
                     topDeck.imgs.push(bufferDeckImgs[rn])
                     topDeck.data.push(bufferDeckData[rn])
                     if (bottomDeck.imgs.length > 5) {
@@ -228,12 +260,14 @@ let sketch = (p) => {
                         bottomDeck.data = []
 
                     }
-                    rn = Math.floor(Math.random() * bufferDeckImgs.length)
+                    rn = getRandomInt(bufferDeckImgs.length);
                     bottomDeck.imgs.push(bufferDeckImgs[rn])
                     bottomDeck.data.push(bufferDeckData[rn])
                 }
             }
         })
+        console.log(`setup finished`)
+        setupReady = true
     }
 
     p.windowResized = () => {
@@ -249,7 +283,14 @@ let sketch = (p) => {
         p.background(10, 10, 10, 251)
     }
 
-    p.draw = () => {
+    p.draw = async () => {
+        if(!setupReady){
+            console.log(`NOT DRAWING`)
+            p.frameRate(1)
+        }
+        else {
+        p.frameRate(24)
+        
         p.background(10, 10, 10, 251)
 
 
@@ -258,7 +299,6 @@ let sketch = (p) => {
             p.text(`Ready? Press [Space Bar] or Tap to Start`, gridSpaceX * 7, gridSpaceY * 17, gridSpaceX*18, gridSpaceY*6)
             p.text(`How to Play: `, gridSpaceX * 7, gridSpaceY * 18, gridSpaceX*18, gridSpaceY*6)
             p.text(`Drag and Drop one image from the 6 bottom that matches one of the upper 6  `, gridSpaceX * 7, gridSpaceY * 19, gridSpaceX*18, gridSpaceY*6)
-
             opDeckBtn.hide()
         }
 
@@ -372,7 +412,8 @@ let sketch = (p) => {
             if (elapsedTime > someHeartBeatPeriod) {
                 lastGeneratedTime = now
                 shuffles = 0
-                someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * ranTime) + minTime)
+                someHeartBeatPeriod = 1000 * (getRandomNumber(minTime, minTime + ranTime));
+
                 tempcol = "#" + makeHexString(6)
 
                 for (let index = 0; index < 6; index++) {
@@ -384,10 +425,11 @@ let sketch = (p) => {
 
                     }
 
-                    let rn = Math.floor(Math.random() * bufferDeckImgs.length)
+                    
+                    let rn = getRandomInt(bufferDeckImgs.length);
                     bottomDeck.imgs.push(bufferDeckImgs[rn])
                     bottomDeck.data.push(bufferDeckData[rn])
-                    rn = Math.floor(Math.random() * bufferDeckImgs.length)
+                    rn = getRandomInt(bufferDeckImgs.length);
                     topDeck.imgs.push(bufferDeckImgs[rn])
                     topDeck.data.push(bufferDeckData[rn])
                 }
@@ -401,7 +443,7 @@ let sketch = (p) => {
                 p.background(10, 10, 10, 251)
             }
         }
-    }
+    }}
 
     p.doubleClicked = () => {
         if (gameStatus === `lose`) {
@@ -456,7 +498,7 @@ let sketch = (p) => {
                         topDeck.imgs = []
                         topDeck.data = []
                     }
-                    let rn = Math.floor(Math.random() * bufferDeckImgs.length)
+                    let rn = getRandomInt(bufferDeckImgs.length);
                     topDeck.imgs.push(bufferDeckImgs[rn])
                     topDeck.data.push(bufferDeckData[rn])
 
@@ -465,7 +507,7 @@ let sketch = (p) => {
                         bottomDeck.data = []
 
                     }
-                    let rn2 = Math.floor(Math.random() * bufferDeckImgs.length)
+                    let rn2 = getRandomInt(bufferDeckImgs.length);
                     bottomDeck.imgs.push(bufferDeckImgs[rn2])
                     bottomDeck.data.push(bufferDeckData[rn2])
                 }
@@ -504,7 +546,8 @@ let sketch = (p) => {
 
                 elapsedTime = 0
                 lastGeneratedTime = p.millis()
-                someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * ranTime) + minTime)
+                someHeartBeatPeriod = 1000 * (getRandomNumber(minTime, minTime + ranTime));
+
                 tempcol = "#" + makeHexString(6)
 
                 for (let index = 0; index < 6; index++) {
@@ -515,12 +558,11 @@ let sketch = (p) => {
                         bottomDeck.data = []
 
                     }
-
-                    let rn = Math.floor(Math.random() * bufferDeckImgs.length)
+                    let rn = getRandomInt(bufferDeckImgs.length);
                     bottomDeck.imgs.push(bufferDeckImgs[rn])
                     bottomDeck.data.push(bufferDeckData[rn])
 
-                    rn = Math.floor(Math.random() * bufferDeckImgs.length)
+                    rn = getRandomInt(bufferDeckImgs.length);
                     topDeck.imgs.push(bufferDeckImgs[rn])
                     topDeck.data.push(bufferDeckData[rn])
                 }
@@ -537,7 +579,8 @@ let sketch = (p) => {
 
             elapsedTime = 0
             lastGeneratedTime = p.millis()
-            someHeartBeatPeriod = 1000 * (Math.floor(Math.random() * ranTime) + minTime)
+            someHeartBeatPeriod = 1000 * (getRandomNumber(minTime, minTime + ranTime));
+
             tempcol = "#" + makeHexString(6)
 
             for (let index = 0; index < 6; index++) {
@@ -549,11 +592,12 @@ let sketch = (p) => {
 
                 }
 
-                let rn = Math.floor(Math.random() * bufferDeckImgs.length)
+                
+                let rn = getRandomInt(bufferDeckImgs.length);
                 bottomDeck.imgs.push(bufferDeckImgs[rn])
                 bottomDeck.data.push(bufferDeckData[rn])
 
-                rn = Math.floor(Math.random() * bufferDeckImgs.length)
+                rn = getRandomInt(bufferDeckImgs.length);
                 topDeck.imgs.push(bufferDeckImgs[rn])
                 topDeck.data.push(bufferDeckData[rn])
             }

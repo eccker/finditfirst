@@ -160,8 +160,8 @@ let loadAfterOnload = async () => {
     let userCookie = await getCookie(cookieNameApp)
     userCookie === null?uJWT = 0:uJWT = 1
     // Generate a RHUID and store it on localstorage
-    let script = document.createElement('script')
-    script.onload = () => {
+    const script = document.createElement('script')
+    script.onload = () => {  
         if (uJWT === 0) {
             let oHeader = { alg: 'HS256', typ: 'JWT' }
             let oPayload = {
@@ -180,7 +180,6 @@ let loadAfterOnload = async () => {
             window.localStorage.setItem('hashedpassword', hashedpassword)
             let sHeader = JSON.stringify(oHeader)
             let sPayload = JSON.stringify(oPayload)
-            // TODO this must be requested as an API request
             let randomKey = makeSecret(32)
             let preuserJWT = KJUR.jws.JWS.sign("HS256", sHeader, sPayload, randomKey)
             getJSON(`/token/${preuserJWT}/${randomKey}`,  (err, data) => {
@@ -190,11 +189,11 @@ let loadAfterOnload = async () => {
                     window.localStorage.setItem('userJWT', data) 
                     writeCookie(cookieNameApp, data, 1)
                     let userJWT = window.localStorage.getItem('userJWT')
-                    getJSON(`/auth/${userJWT}/${hashedpassword}`,  (err, data) => {
+                    getJSON(`/auth/${userJWT}/${hashedpassword}`, async (err, data) => {
                         if (err != null) {
                             console.error(err)
                         } else {
-                            console.log('DEBIG:::::: This is the data return by auth path: ' + data)
+                            console.log('DEBIG:::::: This is the data return by auth path after requesting a new token: ' + data)
                             new p5(sketch)
                         }
                     })
@@ -203,11 +202,11 @@ let loadAfterOnload = async () => {
         } else {
             let userJWT = window.localStorage.getItem('userJWT')
             hashedpassword = window.localStorage.getItem('hashedpassword')
-            getJSON(`/auth/${userJWT}/${hashedpassword}`,  (err, data) => {
+            getJSON(`/auth/${userJWT}/${hashedpassword}`, async  (err, data) => {
                     if (err != null) {
                         console.error(err)
                     } else {
-                        console.log(data)
+                        console.log('DEBIG:::::: This is the data return by auth path after by returning user: ' + data)
                         new p5(sketch)
                     }
                 })
