@@ -64,6 +64,19 @@ let makeSecret = (length) => {
 	return result
 }
 
+const estados = {
+	"0": "IDLE",
+	"1": "CONNECTED",
+	"2": "NOCONNECTED",
+	"3": "GAMEMATCHREQUESTED",
+	"4": "INGAME",
+	"5": "ENDGAME",
+	"":"",
+	"":"",
+
+	
+  };
+
 let secret1 = makeSecret(32)
 let secret2 = makeSecret(32)
 
@@ -227,26 +240,18 @@ io.on('connection', (socket) => {
 			keys.forEach(key => {
 
 				if (key === 'data') {
-					console.log(`key is: ${key}`)
-					console.log(decoded2.user.data)
-
 					fs.readdir(`./data`, (err, files) => {
 						let filetoopen = files[Math.floor(Math.random() * (files.length + 1))]
-						console.log(filetoopen)
 						fs.readFile(`./data/${filetoopen}`, 'utf8', (err, data) => {
 							if (err) {
 								console.log(`Error reading file from disk: ${err}`);
 							} else {
-								// parse JSON string to JSON object
 								const objectFromFile = JSON.parse(data);
 								const objFromFile = objectFromFile[Math.floor(Math.random() * (objectFromFile.length))];
-								// console.log(`objFromFileThumbURL is: ${objFromFile.urls.thumb}`)
 								io.emit(`channel02`, objFromFile)
 							}
 						});
 					});
-
-
 				}
 				if (key === 'buffer') {
 					let buffLenght = decoded2.user.buffer
