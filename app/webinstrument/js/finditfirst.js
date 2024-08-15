@@ -9,6 +9,8 @@ let sketch = (p) => {
     
 
     const INITIAL_DIFFICULTY = 16
+    const INITIAL_MINTIME = 2.0
+    const INITIAL_RANTIME = 8.0
     let now = 0
     let lastGeneratedTime = 0
     let canvasApp
@@ -19,8 +21,8 @@ let sketch = (p) => {
     let elapsedTime
     let tempcol = `#33ffccff`
     let someHeartBeatPeriod = 0
-    let minTime = 2.0
-    let ranTime = 8.0
+    let minTime = INITIAL_MINTIME
+    let ranTime = INITIAL_RANTIME
     let bleedRate = 0.16
 
     let topDeck
@@ -59,9 +61,7 @@ let sketch = (p) => {
         let characters = 'ABCDEF0123456789'
         let charactersLength = characters.length
         for (var i = 0; i < length; i++) {
-            // result += characters.charAt(Math.floor(Math.random() * charactersLength))
             result += characters.charAt(getRandomInt(charactersLength));
-
         }
         return result
     }
@@ -85,7 +85,7 @@ let sketch = (p) => {
         socket.emit(`server`, signedCommands + `;` + currentJWT)
     }
 
-    let encodeSendJWTData = (_dataToSend, _channel) => {
+    let sendPlayerStatus = (_dataToSend, _channel) => {
 
         let currentJWT = window.localStorage.getItem('userJWT')
         let oHeader = {
@@ -105,7 +105,7 @@ let sketch = (p) => {
         socket.emit(`server`, signedCommands + `;` + currentJWT)
     }
 
-    let encodeSendJWTRequestBuffer = (buffLength = 16, _channel) => {
+    let requestBuffer = (buffLength = 16, _channel) => {
 
         let currentJWT = window.localStorage.getItem('userJWT')
         let oHeader = {
@@ -226,7 +226,7 @@ let sketch = (p) => {
             }
         )
         
-        encodeSendJWTData("CONNECTED", channel)
+        sendPlayerStatus("CONNECTED", channel)
         
         elapsedTimesRegistered[0] = 0
         topDeck = new card(gridSpaceX * 3, gridSpaceY * 3)
@@ -236,7 +236,7 @@ let sketch = (p) => {
         bottomDeck.initCards(p, cropAndResizeImage)
 
         difficulty = INITIAL_DIFFICULTY
-        encodeSendJWTRequestBuffer(difficulty, channel)
+        requestBuffer(difficulty, channel)
 
         someHeartBeatPeriod = 1000 * (getRandomNumber(minTime, minTime + ranTime));
 
@@ -274,14 +274,10 @@ let sketch = (p) => {
 
     p.windowResized = () => {
         p.resizeCanvas(p.windowWidth, p.windowHeight)
-
-
-
         opDeckBtn.position(14 * p.width / 16, 7 * p.height / 16);
         opDeckBtn.style('position', 'fixed')
         bottomDeck.initCardsLocations(p)
         topDeck.initCardsLocations(p)
-
         p.background(10, 10, 10, 251)
     }
 
@@ -440,8 +436,8 @@ let sketch = (p) => {
                 shuffles = 0
                 if (lifes == 0) {
                     gameStatus = `lose`
-                    encodeSendJWTRequestBuffer(difficulty, channel)
-                    encodeSendJWTData("END GAME", channel)
+                    // requestBuffer(difficulty, channel)
+                    sendPlayerStatus("END GAME", channel)
                 }
                 p.background(10, 10, 10, 251)
             }
@@ -452,8 +448,8 @@ let sketch = (p) => {
         if (gameStatus === `lose`) {
             gameStatus = `ready`
             difficulty = INITIAL_DIFFICULTY
-            minTime = 2.0
-            ranTime = 8.0
+            minTime = INITIAL_MINTIME
+            ranTime = INITIAL_RANTIME
             shuffles = 0
             elapsedTimesRegistered = []
             elapsedTimesRegistered[0] = 0
@@ -479,8 +475,8 @@ let sketch = (p) => {
             if (gameStatus === `lose`) {
                 gameStatus = `ready`
                 difficulty = INITIAL_DIFFICULTY
-                minTime = 2.0
-                ranTime = 8.0
+                minTime = INITIAL_MINTIME
+                ranTime = INITIAL_RANTIME
                 shuffles = 0
                 elapsedTimesRegistered = []
                 elapsedTimesRegistered[0] = 0
@@ -547,7 +543,7 @@ let sketch = (p) => {
             if (gameStatus === `ready` || gameStatus === `won` || gameStatus === `expired`) {
                 if(gameMatchStarted === false){
                     gameMatchStarted = true
-                    encodeSendJWTData("GAME STARTED", channel)
+                    sendPlayerStatus("GAME STARTED", channel)
                 }
                 shuffles = 0
                 bottomDeck.initCardsLocations(p)
@@ -584,7 +580,7 @@ let sketch = (p) => {
         if (gameStatus === `ready` || gameStatus === `won` || gameStatus === `expired`) {
             if(gameMatchStarted === false){
                 gameMatchStarted = true
-                encodeSendJWTData("GAME STARTED", channel)
+                sendPlayerStatus("GAME STARTED", channel)
             }
             shuffles = 0
             bottomDeck.initCardsLocations(p)
@@ -644,8 +640,6 @@ let sketch = (p) => {
                     verifyWon = true
 
                     elapsedTimesRegistered.push(elapsedTime)
-
-                    // Score = 1000 * difficulty + 100 * (1/time-to-match) - 10 * Number-of-shuffles
                     const lastScore = (difficulty * 1000) + (1000 / Math.floor(elapsedTime))*1000 - (10 * shuffles)
                     console.log("lastScore: ***** ", lastScore)
                     scores.push(lastScore)
@@ -654,7 +648,7 @@ let sketch = (p) => {
                     bottomDeck.locationsY[imgDragged] = topDeck.locationsY[idx]
                     gameStatus = `won`
                     difficulty++
-                    encodeSendJWTRequestBuffer(difficulty, channel)
+                    requestBuffer(difficulty, channel)
                     ranTime -= 1
                     minTime -= bleedRate
                     if (ranTime < 12.0) {

@@ -43,6 +43,7 @@ if (runMode === `dev`) {
 
 // -------- cloud infrastructure, setting and configurations
 require('console-stamp')(console, '[HH:MM:ss.l]')
+const crypto = require('crypto');
 require('dotenv').config();
 let app = require('express')()
 let serveStatic = require('serve-static')
@@ -204,6 +205,10 @@ let io = require('socket.io')(server, {
 	}
 });
 let allClients = []
+const getRandomInt = (max) => {
+	return crypto.randomInt(max);
+}
+
 io.on('connection', (socket) => {
 	console.log('Un cliente se ha conectado con id: ', socket.id)
 	allClients.push(socket)
@@ -235,7 +240,7 @@ io.on('connection', (socket) => {
 		try {
 			decoded2 = jsonwebtoken.verify(commands, uJWT)
 			let keys = Object.keys(decoded2.user)
-			keys.forEach(key => {
+			keys.forEach(async key => {
 				if (key === 'status') {
 					let estadoActual = decoded2.user.status
 					let chnnl = decoded2.user.channel
@@ -267,17 +272,16 @@ io.on('connection', (socket) => {
 					let chnnl = decoded2.user.channel
 					for (let idxBuff = 0; idxBuff < buffLenght; idxBuff++) {
 						fs.readdir(`./data`, (err, files) => {
-							let filetoopen = files[Math.floor(Math.random() * (files.length + 1))]
-							console.log(filetoopen)
+							let filetoopen = files[getRandomInt(files.length)];
+							// console.log(filetoopen)
 							fs.readFile(`./data/${filetoopen}`, 'utf8', (err, data) => {
 								if (err) {
 									console.log(`Error reading file from disk: ${err}`);
 								} else {
 									const objectFromFile = JSON.parse(data);
-									const objFromFile = objectFromFile[Math.floor(Math.random() * (objectFromFile.length))];
-									console.log(`On channel: ${chnnl} and ${JSON.stringify(objFromFile?.id,null, 4)}`)
-                                    const IDs = {id:objFromFile.id, urls:objFromFile.urls}
-									io.emit(chnnl, IDs)
+									const objFromFile = objectFromFile[getRandomInt(objectFromFile.length)];
+                                    const imageInfo = {id:objFromFile.id, urls:objFromFile.urls}
+									io.emit(chnnl, imageInfo)
 								}
 							});
 						});						
