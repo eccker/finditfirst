@@ -67,14 +67,12 @@ let makeSecret = (length) => {
 const estados = {
 	"0": "IDLE",
 	"1": "CONNECTED",
-	"2": "NOCONNECTED",
-	"3": "GAMEMATCHREQUESTED",
-	"4": "INGAME",
-	"5": "ENDGAME",
-	"":"",
-	"":"",
-
-	
+	"2": "NO CONNECTED",
+	"3": "GAME MATCH REQUESTED",
+	"4": "GAME STARTED",
+	"5": "END GAME",
+	"6": "WAITING RESULTS",
+	"7": "OTHER",
   };
 
 let secret1 = makeSecret(32)
@@ -238,20 +236,31 @@ io.on('connection', (socket) => {
 			decoded2 = jsonwebtoken.verify(commands, uJWT)
 			let keys = Object.keys(decoded2.user)
 			keys.forEach(key => {
-
-				if (key === 'data') {
-					fs.readdir(`./data`, (err, files) => {
-						let filetoopen = files[Math.floor(Math.random() * (files.length + 1))]
-						fs.readFile(`./data/${filetoopen}`, 'utf8', (err, data) => {
-							if (err) {
-								console.log(`Error reading file from disk: ${err}`);
-							} else {
-								const objectFromFile = JSON.parse(data);
-								const objFromFile = objectFromFile[Math.floor(Math.random() * (objectFromFile.length))];
-								io.emit(`channel02`, objFromFile)
-							}
-						});
-					});
+				if (key === 'status') {
+					let estadoActual = decoded2.user.status
+					let chnnl = decoded2.user.channel
+					// Verificar el estado actual
+					if (estadoActual === estados["1"]) {
+						console.log("El jugador está conectado");
+  					}
+					if (estadoActual === estados["2"]) {
+						console.log("El jugador NO está conectado");
+  					}
+					if (estadoActual === estados["3"]) {
+						console.log("El jugador solicitó una nueva partida de juego");
+  					}
+					if (estadoActual === estados["4"]) {
+						console.log("La partida de juego solicitada por el jugador ha iniciado");
+  					}
+					if (estadoActual === estados["5"]) {
+						console.log("La partida de juego solicitada por el jugador ha terminado");
+  					}
+					if (estadoActual === estados["6"]) {
+						console.log("El jugador esta esperando los resultados");
+  					}
+					if (estadoActual === estados["7"]) {
+						console.log("OTRO ESTADO");
+  					}
 				}
 				if (key === 'buffer') {
 					let buffLenght = decoded2.user.buffer

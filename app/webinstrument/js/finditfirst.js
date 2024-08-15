@@ -19,8 +19,8 @@ let sketch = (p) => {
     let elapsedTime
     let tempcol = `#33ffccff`
     let someHeartBeatPeriod = 0
-    let minTime = 12.0
-    let ranTime = 68.0
+    let minTime = 2.0
+    let ranTime = 8.0
     let bleedRate = 0.16
 
     let topDeck
@@ -51,6 +51,7 @@ let sketch = (p) => {
     let gridSpaceY
 
     let textSize
+    let gameMatchStarted = false
 
 
     let makeHexString = (length = 6) => {
@@ -94,7 +95,7 @@ let sketch = (p) => {
 
         let oPayload = {
             "user": {
-                "data": _dataToSend,
+                "status": _dataToSend,
                 "channel": _channel
             }
         }
@@ -175,6 +176,10 @@ let sketch = (p) => {
         signer = await provider.getSigner();
         console.log("P5JS: Signer:", signer);
         console.log("P5JS: Account:", await signer.getAddress())
+        const _URL = window.location.search
+        const urlParams = new URLSearchParams(_URL);
+        channel = urlParams.get('channel') ? urlParams.get('channel') : `channel000`
+        
 
         canvasApp = p.createCanvas(p.windowWidth, p.windowHeight)
         canvasApp.style('display', 'block')
@@ -185,12 +190,7 @@ let sketch = (p) => {
         p.background(127)
         p.imageMode(p.CENTER);
         draw_allowed = true;
-        const _URL = window.location.search
 
-
-        const urlParams = new URLSearchParams(_URL);
-
-        channel = urlParams.get('channel') ? urlParams.get('channel') : `channel000`
 
         if (p.windowWidth > p.windowHeight) {
             textSize = 24
@@ -225,7 +225,9 @@ let sketch = (p) => {
                 })
             }
         )
-
+        
+        encodeSendJWTData("CONNECTED", channel)
+        
         elapsedTimesRegistered[0] = 0
         topDeck = new card(gridSpaceX * 3, gridSpaceY * 3)
         topDeck.initCards(p, cropAndResizeImage)
@@ -344,6 +346,7 @@ let sketch = (p) => {
         }
 
         if (gameStatus === `lose`) {
+            
             p.fill(200, 20, 15);
             p.text(`Game Over. Press [r] to restart the Game`, gridSpaceX * 7, gridSpaceY * 17, gridSpaceX*18, gridSpaceY*6)
 
@@ -370,7 +373,6 @@ let sketch = (p) => {
         }
 
         if (gameStatus === `playing`) {
-
 
             opDeckBtn.show()
 
@@ -439,24 +441,26 @@ let sketch = (p) => {
                 if (lifes == 0) {
                     gameStatus = `lose`
                     encodeSendJWTRequestBuffer(difficulty, channel)
+                    encodeSendJWTData("END GAME", channel)
                 }
                 p.background(10, 10, 10, 251)
             }
         }
     }}
 
-    p.doubleClicked = () => {
+    p.doubleClicked = async () => {
         if (gameStatus === `lose`) {
             gameStatus = `ready`
             difficulty = INITIAL_DIFFICULTY
-            minTime = 12.0
-            ranTime = 68.0
+            minTime = 2.0
+            ranTime = 8.0
             shuffles = 0
             elapsedTimesRegistered = []
             elapsedTimesRegistered[0] = 0
             scores = []
             scores[0] = 0
             lifes = 3
+            gameMatchStarted = false
         }
     }
 
@@ -475,14 +479,15 @@ let sketch = (p) => {
             if (gameStatus === `lose`) {
                 gameStatus = `ready`
                 difficulty = INITIAL_DIFFICULTY
-                minTime = 12.0
-                ranTime = 68.0
+                minTime = 2.0
+                ranTime = 8.0
                 shuffles = 0
                 elapsedTimesRegistered = []
                 elapsedTimesRegistered[0] = 0
                 scores = []
                 scores[0] = 0
                 lifes = 3
+                gameMatchStarted = false
             }
 
 
@@ -540,6 +545,10 @@ let sketch = (p) => {
         }
         if (p.key === ' ') {
             if (gameStatus === `ready` || gameStatus === `won` || gameStatus === `expired`) {
+                if(gameMatchStarted === false){
+                    gameMatchStarted = true
+                    encodeSendJWTData("GAME STARTED", channel)
+                }
                 shuffles = 0
                 bottomDeck.initCardsLocations(p)
                 gameStatus = `playing`
@@ -573,6 +582,10 @@ let sketch = (p) => {
 
     p.mousePressed = async () => {
         if (gameStatus === `ready` || gameStatus === `won` || gameStatus === `expired`) {
+            if(gameMatchStarted === false){
+                gameMatchStarted = true
+                encodeSendJWTData("GAME STARTED", channel)
+            }
             shuffles = 0
             bottomDeck.initCardsLocations(p)
             gameStatus = `playing`
